@@ -40,7 +40,6 @@
     </aside>
 
     <main class="flex-1 flex flex-col h-full min-w-0 bg-slate-50 relative">
-
         <div id="mod-atas" class="modulo-conteudo flex-1 flex flex-col h-full overflow-hidden">
             <header class="bg-white border-b border-slate-200 py-4 px-8 shadow-sm flex items-center justify-between shrink-0">
                 <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -53,8 +52,7 @@
 
             <div class="p-6 overflow-y-auto flex-1 flex flex-col">
                 <div id="caixa-erro" class="hidden mb-6 bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-800 shadow-sm">
-                    <h3 class="font-bold flex items-center gap-2 mb-2 text-base"><iconify-icon icon="lucide:alert-octagon"></iconify-icon> Falha de Comunicação com o Governo</h3>
-                    <p class="mb-2">O Portal Nacional de Contratações Públicas (PNCP) bloqueou a tentativa de puxar os dados. Veja o log técnico abaixo:</p>
+                    <h3 class="font-bold flex items-center gap-2 mb-2 text-base"><iconify-icon icon="lucide:alert-octagon"></iconify-icon> Falha Detectada</h3>
                     <div class="bg-white/60 p-3 rounded border border-red-100 font-mono text-xs text-red-900 break-all" id="log-erro"></div>
                 </div>
 
@@ -62,7 +60,6 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Ano da Compra</label>
                         <select id="filtro-ano" class="p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 w-32">
-                            <option value="2026">2026</option>
                             <option value="2025" selected>2025</option>
                             <option value="2024">2024</option>
                             <option value="2023">2023</option>
@@ -76,8 +73,8 @@
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Vínculo</label>
                         <select id="filtro-tipo" class="p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="todas">Todas as Atas</option>
-                            <option value="gerenciadora">Apenas UFR (Gerenciadora)</option>
-                            <option value="participante">Apenas Externas (Participante)</option>
+                            <option value="gerenciadora">Apenas UFR</option>
+                            <option value="participante">Apenas Externas</option>
                         </select>
                     </div>
                     <button onclick="carregarAtas()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow flex items-center gap-2">
@@ -98,7 +95,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-corpo" class="divide-y divide-slate-100">
-                                <tr><td colspan="5" class="p-12 text-center text-slate-400">Selecione o ano (tente 2024 caso 2025 esteja vazio) e clique em Puxar Dados.</td></tr>
+                                <tr><td colspan="5" class="p-12 text-center text-slate-400">Clique em Puxar Dados para usar sua ponte do Google.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -131,7 +128,7 @@
                 <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-700 p-2"><iconify-icon icon="lucide:x" class="text-2xl"></iconify-icon></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6">
-                <div id="loading-itens" class="hidden text-center py-10 text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-4xl animate-spin mb-2"></iconify-icon><p>Consultando saldos em tempo real...</p></div>
+                <div id="loading-itens" class="hidden text-center py-10 text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-4xl animate-spin mb-2"></iconify-icon><p>Buscando via Google Script...</p></div>
                 <table id="tabela-itens" class="w-full text-sm text-left border border-slate-200 rounded-lg overflow-hidden hidden">
                     <thead class="bg-slate-50 text-xs text-slate-500">
                         <tr><th class="p-3">Item</th><th class="p-3">Descrição</th><th class="p-3 text-right">R$ Unit.</th><th class="p-3 text-center text-blue-700 bg-blue-50">Saldo Disponível</th></tr>
@@ -143,11 +140,13 @@
     </div>
 
     <script>
-        const CNPJ_UFR = "10673078000169";
-        // Utilizamos a API Pública de Consulta do PNCP, que tem regras de CORS mais brandas
-        const API_BASE = "https://pncp.gov.br/api/consulta/v1"; 
-        const API_SISTEMA = "https://pncp.gov.br/api/pncp/v1";
+        // =========================================================================
+        // COLOQUE O LINK QUE VOCÊ COPIOU DO GOOGLE AQUI DENTRO DAS ASPAS:
+        const URL_MEU_PROXY = "COLE_AQUI_O_LINK_DO_GOOGLE_SCRIPT";
+        // =========================================================================
 
+        const CNPJ_UFR = "10673078000169";
+        const API_SISTEMA = "https://pncp.gov.br/api/pncp/v1";
         let dadosCompletosAtas = [];
 
         window.onload = () => {
@@ -178,42 +177,28 @@
             const caixa = document.getElementById('caixa-erro');
             const log = document.getElementById('log-erro');
             caixa.classList.remove('hidden');
-            log.innerHTML += `[${new Date().toLocaleTimeString()}] ${mensagemLog}<br>`;
+            log.innerHTML += `[API PNCP via Google] ${mensagemLog}<br>`;
             setStatus(false);
         }
 
-        // MOTOR ANTI-BLOQUEIO (Tenta 3 caminhos diferentes para furar o firewall)
-        async function fetchBlindado(url) {
-            const rotas = [
-                { nome: "Acesso Direto", prefixo: "" },
-                { nome: "Proxy CORS 1", prefixo: "https://corsproxy.io/?" },
-                { nome: "Proxy CORS 2", prefixo: "https://api.allorigins.win/raw?url=" }
-            ];
-
-            let ultimoErro = "";
-
-            for (let rota of rotas) {
-                try {
-                    const finalUrl = rota.prefixo ? rota.prefixo + encodeURIComponent(url) : url;
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-                    const resposta = await fetch(finalUrl, { 
-                        signal: controller.signal,
-                        headers: { "Accept": "application/json" }
-                    });
-                    
-                    clearTimeout(timeoutId);
-
-                    if (resposta.status === 404) return { dados: null, erro: null }; // 404 significa apenas que não tem compras naquele ano
-                    if (resposta.ok) return { dados: await resposta.json(), erro: null };
-                    
-                    ultimoErro = `${rota.nome} rejeitou com HTTP ${resposta.status}`;
-                } catch (e) {
-                    ultimoErro = `${rota.nome} falhou (${e.name === 'AbortError' ? 'Timeout' : 'Bloqueio de Rede'})`;
-                }
+        async function fetchGoogleProxy(urlGov) {
+            if(URL_MEU_PROXY === "https://script.google.com/macros/s/AKfycbxDY89-cgclvSkh9xLMWYeNwhkUKdZoYR3bamKTWzKD9F3PtlJy3lmz-gexTt1tWUGFBQ/exec" || !URL_MEU_PROXY) {
+                return {erro: "Você esqueceu de colar a URL do Google Apps Script no código HTML (Linha 199)."};
             }
-            return { dados: null, erro: `Todas as rotas falharam. Último rastro: ${ultimoErro}` };
+            
+            try {
+                const urlFinal = URL_MEU_PROXY + "?url=" + encodeURIComponent(urlGov);
+                const resposta = await fetch(urlFinal);
+                const json = await resposta.json();
+                
+                // Se a API do governo retornar erro que nosso proxy capturou
+                if (json.status && json.status === 404) return { dados: null }; 
+                if (json.erro) return { erro: json.erro };
+                
+                return { dados: json };
+            } catch (e) {
+                return { erro: "Falha de rede ao conectar com o script do Google." };
+            }
         }
 
         async function carregarAtas() {
@@ -222,33 +207,34 @@
             document.getElementById('caixa-erro').classList.add('hidden');
             document.getElementById('log-erro').innerHTML = '';
             
-            document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-3xl animate-spin text-blue-500 mb-2 block mx-auto"></iconify-icon> Conectando à base do Governo...</td></tr>`;
+            document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-3xl animate-spin text-blue-500 mb-2 block mx-auto"></iconify-icon> Conectando via Servidor Privado...</td></tr>`;
             setStatus(true, "Buscando compras da UFR...");
 
-            // Busca Compras usando a API oficial do sistema
             const urlCompras = `${API_SISTEMA}/orgaos/${CNPJ_UFR}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=50`;
-            const resultadoCompras = await fetchBlindado(urlCompras);
+            const resultadoCompras = await fetchGoogleProxy(urlCompras);
 
             if (resultadoCompras.erro) {
-                mostrarErro(`Falha ao buscar lista de compras de ${ano}: ${resultadoCompras.erro}`);
-                document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">Busca abortada devido a erro de rede.</td></tr>`;
+                mostrarErro(resultadoCompras.erro);
+                document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">Busca abortada devido a erro.</td></tr>`;
                 return;
             }
 
-            const compras = resultadoCompras.dados ? (resultadoCompras.dados.data || []) : [];
+            // O PNCP pode retornar os dados direto no array ou dentro da chave 'data'
+            let compras = [];
+            if (Array.isArray(resultadoCompras.dados)) compras = resultadoCompras.dados;
+            else if (resultadoCompras.dados && resultadoCompras.dados.data) compras = resultadoCompras.dados.data;
             
             if (compras.length === 0) {
-                document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-amber-600 font-bold">O PNCP não retornou NENHUMA compra registrada pela UFR (Gerenciadora) para o ano de ${ano}. Tente buscar o ano de 2024.</td></tr>`;
+                document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-amber-600 font-bold">A UFR (Gerenciadora) não publicou nenhuma compra no PNCP no ano de ${ano}.</td></tr>`;
                 setStatus(false);
                 return;
             }
 
             let contador = 1;
             for (let c of compras) {
-                setStatus(true, `Analisando compra ${contador} de ${compras.length}...`);
-                
+                setStatus(true, `Lendo compra ${contador} de ${compras.length}...`);
                 const urlAtas = `${API_SISTEMA}/orgaos/${CNPJ_UFR}/compras/${ano}/${c.sequencialCompra}/atas`;
-                const resultadoAtas = await fetchBlindado(urlAtas);
+                const resultadoAtas = await fetchGoogleProxy(urlAtas);
                 
                 if (resultadoAtas.dados) {
                     let listaA = Array.isArray(resultadoAtas.dados) ? resultadoAtas.dados : (resultadoAtas.dados.data || []);
@@ -264,10 +250,10 @@
             for (let ext of externas) {
                 if (ext.ano === ano) {
                     setStatus(true, `Lendo Ata Externa (${ext.cnpj})...`);
-                    const resC = await fetchBlindado(`${API_SISTEMA}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}`);
-                    const objE = resC.dados ? resC.dados.objetoCompra : "Objeto não detalhado";
+                    const resC = await fetchGoogleProxy(`${API_SISTEMA}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}`);
+                    const objE = (resC.dados && resC.dados.objetoCompra) ? resC.dados.objetoCompra : "Objeto não detalhado";
                     
-                    const resA = await fetchBlindado(`${API_SISTEMA}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}/atas`);
+                    const resA = await fetchGoogleProxy(`${API_SISTEMA}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}/atas`);
                     if (resA.dados) {
                         let listaA = Array.isArray(resA.dados) ? resA.dados : (resA.dados.data || []);
                         listaA.forEach(a => {
@@ -277,7 +263,6 @@
                 }
             }
 
-            // Prepara prazos
             const hoje = new Date(); hoje.setHours(0,0,0,0);
             dadosCompletosAtas.forEach(a => {
                 const fim = a.dataVigenciaFim ? new Date(a.dataVigenciaFim) : null;
@@ -333,10 +318,10 @@
             const tbody = document.getElementById('corpo-itens');
             tbody.innerHTML = '';
 
-            const res = await fetchBlindado(`${API_SISTEMA}/orgaos/${cnpj}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`);
+            const res = await fetchGoogleProxy(`${API_SISTEMA}/orgaos/${cnpj}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`);
             
             if(res.erro) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500">Erro de conexão ao baixar itens.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500">Erro ao baixar itens via Google.</td></tr>`;
             } else {
                 let itens = Array.isArray(res.dados) ? res.dados : (res.dados ? res.dados.data : []);
                 itens.forEach(i => {
@@ -357,7 +342,6 @@
 
         function fecharModal() { document.getElementById('modal-itens').classList.add('opacity-0', 'pointer-events-none'); }
 
-        // GESTÃO PARTICIPANTES
         function adicionarParticipante() {
             const cnpj = document.getElementById('add-cnpj').value.replace(/\D/g, '');
             const ano = document.getElementById('add-ano').value;
@@ -367,6 +351,7 @@
             const ext = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
             ext.push({cnpj, ano, seq});
             localStorage.setItem('ufr_atas_participantes', JSON.stringify(ext));
+            document.getElementById('add-cnpj').value = ''; document.getElementById('add-seq').value = '';
             atualizarTabelaParticipantes();
             alert("Ata salva! Volte à pesquisa e clique em Puxar Dados.");
         }
@@ -374,7 +359,7 @@
         function atualizarTabelaParticipantes() {
             const ext = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
             const tbody = document.getElementById('lista-participantes');
-            tbody.innerHTML = ext.length === 0 ? `<tr><td class="p-4 text-center text-slate-400">Vazio.</td></tr>` : '';
+            tbody.innerHTML = ext.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400 text-xs">Vazio.</td></tr>` : '';
             ext.forEach((e, i) => tbody.innerHTML += `<tr><td class="p-3 text-xs font-mono">${e.cnpj}</td><td class="p-3 text-xs">${e.ano}</td><td class="p-3 text-xs">Seq: ${e.seq}</td><td class="p-3"><button onclick="removerParticipante(${i})" class="text-red-500 text-xs font-bold">Remover</button></td></tr>`);
         }
         function removerParticipante(i) {
