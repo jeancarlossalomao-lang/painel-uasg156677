@@ -51,10 +51,10 @@
         <div id="mod-atas" class="modulo-conteudo flex-1 flex flex-col h-full overflow-hidden">
             <header class="bg-white border-b border-slate-200 py-4 px-8 shadow-sm flex items-center justify-between shrink-0">
                 <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                    <iconify-icon icon="lucide:search"></iconify-icon> Módulo: Pesquisa e Saldo de Atas
+                    <iconify-icon icon="lucide:search"></iconify-icon> Pesquisa e Saldo de Atas
                 </h1>
                 <div id="status-busca" class="text-xs text-blue-600 font-medium px-3 py-1 bg-blue-50 border border-blue-100 rounded-full hidden flex items-center gap-2">
-                    <iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon> Conectando ao PNCP...
+                    <iconify-icon icon="lucide:loader-2" class="animate-spin text-lg"></iconify-icon> <span id="status-texto">Pronto</span>
                 </div>
             </header>
 
@@ -81,7 +81,7 @@
                         </select>
                     </div>
                     <button onclick="carregarAtas()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow flex items-center gap-2">
-                        <iconify-icon icon="lucide:search"></iconify-icon> Buscar
+                        <iconify-icon icon="lucide:download-cloud"></iconify-icon> Puxar Dados do PNCP
                     </button>
                 </div>
 
@@ -98,7 +98,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-corpo" class="divide-y divide-slate-100">
-                                <tr><td colspan="5" class="p-8 text-center text-slate-400">Clique em "Buscar" para carregar as atas do PNCP.</td></tr>
+                                <tr><td colspan="5" class="p-12 text-center text-slate-400">Clique no botão azul para baixar as atas do ano selecionado.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -109,13 +109,13 @@
         <div id="mod-contratos" class="modulo-conteudo hidden flex-1 flex flex-col items-center justify-center p-8 text-slate-400">
             <iconify-icon icon="lucide:hard-hat" class="text-6xl mb-4 text-slate-300"></iconify-icon>
             <h2 class="text-xl font-bold text-slate-600">Módulo em Construção</h2>
-            <p>O acompanhamento de contratos será disponibilizado na próxima versão.</p>
+            <p>Em breve.</p>
         </div>
 
         <div id="mod-config" class="modulo-conteudo hidden flex-1 flex flex-col h-full overflow-hidden">
             <header class="bg-white border-b border-slate-200 py-4 px-8 shadow-sm shrink-0">
                 <h1 class="text-xl font-bold text-slate-800">Gerenciar Atas Externas (UFR Participante)</h1>
-                <p class="text-xs text-slate-500 mt-1">Como o PNCP não lista atas de participantes automaticamente, registre aqui as atas de outros órgãos que a UFR participa. Elas aparecerão junto com as atas da UFR no Módulo de Pesquisa.</p>
+                <p class="text-xs text-slate-500 mt-1">Registre aqui as atas de outros órgãos que a UFR participa. Elas aparecerão junto com as atas da UFR no Módulo de Pesquisa.</p>
             </header>
 
             <div class="p-8 flex-1 overflow-y-auto">
@@ -138,7 +138,6 @@
                     </div>
                 </div>
 
-                <h3 class="font-bold text-slate-700 mb-3">Atas Externas Registradas na Memória</h3>
                 <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                     <table class="w-full text-sm text-left">
                         <thead class="bg-slate-50 text-xs text-slate-500">
@@ -158,7 +157,7 @@
                 <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-700 p-2"><iconify-icon icon="lucide:x" class="text-2xl"></iconify-icon></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6">
-                <div id="loading-itens" class="hidden text-center py-10 text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-4xl animate-spin mb-2"></iconify-icon><p>Buscando itens...</p></div>
+                <div id="loading-itens" class="hidden text-center py-10 text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-4xl animate-spin mb-2"></iconify-icon><p>Buscando saldos...</p></div>
                 <table id="tabela-itens" class="w-full text-sm text-left border border-slate-200 rounded-lg overflow-hidden hidden">
                     <thead class="bg-slate-50 text-xs text-slate-500">
                         <tr><th class="p-3">Item</th><th class="p-3">Descrição</th><th class="p-3">UN</th><th class="p-3 text-right">R$ Unit.</th><th class="p-3 text-center text-blue-700 bg-blue-50 font-bold">Saldo Disponível</th></tr>
@@ -172,23 +171,40 @@
     <script>
         const CNPJ_UFR = "10673078000169";
         const API_BASE = "https://pncp.gov.br/api/pncp/v1";
-        const sleep = ms => new Promise(r => setTimeout(r, ms)); // O segredo para não ser bloqueado pelo WAF
-
         let dadosCompletosAtas = [];
 
-        // Inicialização
+        // --- SISTEMA DE BYPASS CORS (A SOLUÇÃO DO PROBLEMA DE API) ---
+        async function fetchSeguro(url) {
+            // 1. Tenta acesso direto ao Governo
+            try {
+                let r = await fetch(url);
+                if (r.status === 404) return null; // Não existe (ex: ano sem compras)
+                if (r.ok) return await r.json();
+            } catch (e) {
+                // Se der erro de CORS, ele cai aqui silenciosamente e vai pro Proxy
+            }
+
+            // 2. Rota Alternativa (Proxy AllOrigins)
+            try {
+                let proxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+                let r2 = await fetch(proxy);
+                if (r2.status === 404) return null;
+                if (r2.ok) return await r2.json();
+            } catch (e) {
+                console.error("Proxy também falhou:", e);
+            }
+            return null;
+        }
+
         window.onload = () => {
             atualizarTabelaParticipantes();
-            // Lógica de filtro local em tempo real
             document.getElementById('filtro-texto').addEventListener('keyup', renderizarTabela);
             document.getElementById('filtro-tipo').addEventListener('change', renderizarTabela);
         };
 
-        // Troca de Módulos (Navegação)
         function abrirModulo(idModulo) {
             document.querySelectorAll('.modulo-conteudo').forEach(el => el.classList.add('hidden'));
             document.getElementById(idModulo).classList.remove('hidden');
-            
             document.querySelectorAll('.menu-btn').forEach(btn => {
                 btn.classList.remove('bg-blue-500/10', 'text-blue-400', 'border-blue-500/20');
                 btn.classList.add('text-slate-300', 'border-transparent');
@@ -198,79 +214,76 @@
             btnAtivo.classList.add('bg-blue-500/10', 'text-blue-400', 'border-blue-500/20');
         }
 
-        // --- LÓGICA DE BUSCA PRINCIPAL (UFR + PARTICIPANTES JUNTOS) ---
+        function setStatus(visivel, texto = "") {
+            const el = document.getElementById('status-busca');
+            document.getElementById('status-texto').textContent = texto;
+            if (visivel) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+
         async function carregarAtas() {
             const ano = document.getElementById('filtro-ano').value;
-            const statusBusca = document.getElementById('status-busca');
-            
-            document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center"><iconify-icon icon="lucide:loader-2" class="text-3xl animate-spin text-blue-500 mb-2 block mx-auto"></iconify-icon> Baixando dados sem travar o governo... Isso leva alguns segundos.</td></tr>`;
-            statusBusca.classList.remove('hidden');
             dadosCompletosAtas = [];
+            
+            document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-3xl animate-spin text-blue-500 mb-2 block mx-auto"></iconify-icon> <span id="texto-progresso">Iniciando conexão segura com PNCP...</span></td></tr>`;
+            setStatus(true, "Conectando...");
 
-            try {
-                // 1. Buscar Compras da UFR (Gerenciadora)
-                const urlUFR = `${API_BASE}/orgaos/${CNPJ_UFR}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=50`;
-                const respUFR = await fetch(urlUFR);
-                if(respUFR.ok) {
-                    const jsonUFR = await respUFR.json();
-                    const comprasUFR = jsonUFR.data || [];
+            // 1. BUCAR COMPRAS UFR
+            const urlUFR = `${API_BASE}/orgaos/${CNPJ_UFR}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=50`;
+            const jsonUFR = await fetchSeguro(urlUFR);
+
+            if (jsonUFR) {
+                const comprasUFR = jsonUFR.data || [];
+                let contador = 1;
+                
+                for (let c of comprasUFR) {
+                    setStatus(true, `Lendo compra ${contador} de ${comprasUFR.length} (UFR)...`);
+                    document.getElementById('texto-progresso').textContent = `Lendo compra ${contador} de ${comprasUFR.length} (UFR)...`;
                     
-                    // Loop sequencial com Delay para enganar o Firewall
-                    for (let c of comprasUFR) {
-                        try {
-                            const resAta = await fetch(`${API_BASE}/orgaos/${CNPJ_UFR}/compras/${ano}/${c.sequencialCompra}/atas`);
-                            if(resAta.ok) {
-                                const atas = await resAta.json();
-                                (Array.isArray(atas) ? atas : (atas.data || [])).forEach(a => {
-                                    dadosCompletosAtas.push({...a, _tipo: 'GERENCIADORA', _seqCompra: c.sequencialCompra, _anoCompra: ano, _cnpjOrigem: CNPJ_UFR, _objeto: c.objetoCompra});
-                                });
-                            }
-                        } catch(e) {}
-                        await sleep(150); // PAUSA OBRIGATÓRIA CONTRA BLOQUEIO
+                    const atas = await fetchSeguro(`${API_BASE}/orgaos/${CNPJ_UFR}/compras/${ano}/${c.sequencialCompra}/atas`);
+                    if (atas) {
+                        let lista = Array.isArray(atas) ? atas : (atas.data || []);
+                        lista.forEach(a => {
+                            dadosCompletosAtas.push({...a, _tipo: 'GERENCIADORA', _seqCompra: c.sequencialCompra, _anoCompra: ano, _cnpjOrigem: CNPJ_UFR, _objeto: c.objetoCompra});
+                        });
                     }
+                    contador++;
                 }
-
-                // 2. Buscar Atas Externas (Memória LocalStorage)
-                const externas = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
-                for (let ext of externas) {
-                    if (ext.ano === ano) {
-                        try {
-                            // Para externas, temos que buscar a compra para pegar o objeto, depois a ata
-                            const resCompra = await fetch(`${API_BASE}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}`);
-                            let objetoExt = "Objeto não informado";
-                            if(resCompra.ok) { const cData = await resCompra.json(); objetoExt = cData.objetoCompra; }
-                            await sleep(100);
-
-                            const resAtaExt = await fetch(`${API_BASE}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}/atas`);
-                            if(resAtaExt.ok) {
-                                const atasE = await resAtaExt.json();
-                                (Array.isArray(atasE) ? atasE : (atasE.data || [])).forEach(a => {
-                                    dadosCompletosAtas.push({...a, _tipo: 'PARTICIPANTE', _seqCompra: ext.seq, _anoCompra: ext.ano, _cnpjOrigem: ext.cnpj, _objeto: objetoExt});
-                                });
-                            }
-                        } catch(e) {}
-                        await sleep(150);
-                    }
-                }
-
-                // Processar dias restantes
-                const hoje = new Date(); hoje.setHours(0,0,0,0);
-                dadosCompletosAtas.forEach(a => {
-                    const fim = a.dataVigenciaFim ? new Date(a.dataVigenciaFim) : null;
-                    if(fim) {
-                        const diff = Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
-                        a._dias = diff;
-                        a._vigente = diff >= 0;
-                    } else { a._vigente = false; a._dias = -999; }
-                });
-
-                renderizarTabela();
-
-            } catch(e) {
-                alert("Houve uma instabilidade na comunicação com o Ministério da Gestão. Tente buscar novamente.");
-            } finally {
-                statusBusca.classList.add('hidden');
             }
+
+            // 2. BUSCAR ATAS EXTERNAS (PARTICIPANTE)
+            const externas = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
+            for (let ext of externas) {
+                if (ext.ano === ano) {
+                    setStatus(true, `Lendo Ata Externa (CNPJ: ${ext.cnpj})...`);
+                    document.getElementById('texto-progresso').textContent = `Lendo Ata Externa (CNPJ: ${ext.cnpj})...`;
+                    
+                    let objetoExt = "Objeto não detalhado";
+                    const cData = await fetchSeguro(`${API_BASE}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}`);
+                    if (cData) objetoExt = cData.objetoCompra || objetoExt;
+
+                    const atasE = await fetchSeguro(`${API_BASE}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}/atas`);
+                    if (atasE) {
+                        let lista = Array.isArray(atasE) ? atasE : (atasE.data || []);
+                        lista.forEach(a => {
+                            dadosCompletosAtas.push({...a, _tipo: 'PARTICIPANTE', _seqCompra: ext.seq, _anoCompra: ext.ano, _cnpjOrigem: ext.cnpj, _objeto: objetoExt});
+                        });
+                    }
+                }
+            }
+
+            // Calcula os prazos
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            dadosCompletosAtas.forEach(a => {
+                const fim = a.dataVigenciaFim ? new Date(a.dataVigenciaFim) : null;
+                if(fim) {
+                    a._dias = Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
+                    a._vigente = a._dias >= 0;
+                } else { a._vigente = false; a._dias = -999; }
+            });
+
+            setStatus(false);
+            renderizarTabela();
         }
 
         function renderizarTabela() {
@@ -281,23 +294,18 @@
             corpo.innerHTML = '';
             
             let filtradas = dadosCompletosAtas.filter(a => {
-                // Filtro Vigência (Sempre mostrar só as vigentes por padrão)
                 if(!a._vigente) return false;
-                
-                // Filtro Tipo (Dropdown)
                 if(tipoFiltro === 'gerenciadora' && a._tipo !== 'GERENCIADORA') return false;
                 if(tipoFiltro === 'participante' && a._tipo !== 'PARTICIPANTE') return false;
                 
-                // Filtro Texto
                 const buscaConteudo = `${a.numeroAta||''} ${a._objeto||''} ${a.nomeRazaoSocialFornecedor||''}`.toLowerCase();
                 return buscaConteudo.includes(termo);
             });
 
-            // Ordena as que vencem primeiro
             filtradas.sort((a,b) => a._dias - b._dias);
 
             if(filtradas.length === 0) {
-                corpo.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nenhuma ata encontrada com estes filtros.</td></tr>`;
+                corpo.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nenhuma ata encontrada.</td></tr>`;
                 return;
             }
 
@@ -328,7 +336,6 @@
             });
         }
 
-        // --- LÓGICA DO MODAL DE SALDOS ---
         async function verSaldos(cnpj, ano, seqCompra, seqAta, numAta) {
             document.getElementById('modal-itens').classList.remove('opacity-0', 'pointer-events-none');
             document.getElementById('modal-titulo').textContent = `Saldos para Empenho - Ata ${numAta}/${ano}`;
@@ -337,27 +344,28 @@
             const tbody = document.getElementById('corpo-itens');
             tbody.innerHTML = '';
 
-            try {
-                const res = await fetch(`${API_BASE}/orgaos/${cnpj}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`);
-                if(res.ok) {
-                    const itens = await res.json();
-                    (Array.isArray(itens) ? itens : (itens.data||[])).forEach(i => {
-                        const qtdTotal = i.quantidadeRegistrada || i.quantidade || 0;
-                        const saldo = i.quantidadeSaldo != null ? i.quantidadeSaldo : (i.saldoQuantidade != null ? i.saldoQuantidade : qtdTotal);
-                        const vUnit = i.valorUnitario || 0;
-                        
-                        tbody.innerHTML += `
-                            <tr class="border-b border-slate-100">
-                                <td class="p-3 text-center text-xs text-slate-500">${i.numeroItem}</td>
-                                <td class="p-3 text-xs font-medium">${i.descricao || i.materialServico?.descricao || '-'}</td>
-                                <td class="p-3 text-xs">${i.unidadeMedida||'UN'}</td>
-                                <td class="p-3 text-right text-xs">R$ ${vUnit.toLocaleString('pt-BR')}</td>
-                                <td class="p-3 text-center font-bold text-sm bg-blue-50/50 text-blue-700">${saldo}</td>
-                            </tr>
-                        `;
-                    });
-                }
-            } catch(e) {}
+            const itens = await fetchSeguro(`${API_BASE}/orgaos/${cnpj}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`);
+            
+            if(itens) {
+                (Array.isArray(itens) ? itens : (itens.data||[])).forEach(i => {
+                    const qtdTotal = i.quantidadeRegistrada || i.quantidade || 0;
+                    const saldo = i.quantidadeSaldo != null ? i.quantidadeSaldo : (i.saldoQuantidade != null ? i.saldoQuantidade : qtdTotal);
+                    const vUnit = i.valorUnitario || 0;
+                    
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                            <td class="p-3 text-center text-xs text-slate-500">${i.numeroItem}</td>
+                            <td class="p-3 text-xs font-medium">${i.descricao || i.materialServico?.descricao || '-'}</td>
+                            <td class="p-3 text-xs">${i.unidadeMedida||'UN'}</td>
+                            <td class="p-3 text-right text-xs">R$ ${vUnit.toLocaleString('pt-BR')}</td>
+                            <td class="p-3 text-center font-bold text-sm bg-blue-50/50 text-blue-700">${saldo}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-red-500">Erro ao baixar saldos. Tente novamente.</td></tr>`;
+            }
+            
             document.getElementById('loading-itens').classList.add('hidden');
             document.getElementById('tabela-itens').classList.remove('hidden');
         }
@@ -366,7 +374,7 @@
             document.getElementById('modal-itens').classList.add('opacity-0', 'pointer-events-none');
         }
 
-        // --- LÓGICA DE GERENCIAMENTO DE ATAS EXTERNAS (LOCALSTORAGE) ---
+        // --- GESTÃO DE ATAS EXTERNAS ---
         function adicionarParticipante() {
             const cnpj = document.getElementById('add-cnpj').value.replace(/\D/g, '');
             const ano = document.getElementById('add-ano').value;
@@ -380,7 +388,7 @@
             
             document.getElementById('add-cnpj').value = ''; document.getElementById('add-seq').value = '';
             atualizarTabelaParticipantes();
-            alert("Ata registrada na memória! Na próxima vez que você buscar as atas daquele ano no módulo principal, ela aparecerá na lista.");
+            alert("Ata registrada! Agora volte no módulo de Pesquisa e clique em 'Puxar Dados' para ver ela junto com as atas da UFR.");
         }
 
         function atualizarTabelaParticipantes() {
