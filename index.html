@@ -26,102 +26,76 @@
                 </div>
             </div>
         </div>
+        
         <nav class="flex-grow p-4 space-y-2">
             <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-2 mt-4">Módulos</div>
             <button onclick="abrirModulo('mod-atas')" id="btn-mod-atas" class="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20 transition menu-btn">
                 <iconify-icon icon="lucide:clipboard-list"></iconify-icon> Pesquisa de Atas
             </button>
-            <button onclick="abrirModulo('mod-contratos')" id="btn-mod-contratos" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 text-slate-300 font-medium transition menu-btn">
-                <iconify-icon icon="lucide:file-text"></iconify-icon> Contratos (Em Breve)
-            </button>
             <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-2 mt-8">Configurações</div>
             <button onclick="abrirModulo('mod-config')" id="btn-mod-config" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 text-slate-300 font-medium transition menu-btn">
-                <iconify-icon icon="lucide:settings"></iconify-icon> Gerir Órgãos Participantes
+                <iconify-icon icon="lucide:settings"></iconify-icon> Gerir Participantes
             </button>
         </nav>
     </aside>
 
     <main class="flex-1 flex flex-col h-full min-w-0 bg-slate-50 relative">
-
         <div id="mod-atas" class="modulo-conteudo flex-1 flex flex-col h-full overflow-hidden">
             <header class="bg-white border-b border-slate-200 py-4 px-8 shadow-sm flex items-center justify-between shrink-0">
                 <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
                     <iconify-icon icon="lucide:search"></iconify-icon> Pesquisa e Saldo de Atas
                 </h1>
-                <div class="flex items-center gap-3">
-                    <button onclick="testarConexao()" class="text-xs text-slate-500 border border-slate-200 px-3 py-1.5 rounded-full hover:bg-slate-100 flex items-center gap-1">
-                        <iconify-icon icon="lucide:stethoscope"></iconify-icon> Diagnóstico
-                    </button>
-                    <div id="status-busca" class="text-xs text-blue-600 font-medium px-3 py-1 bg-blue-50 border border-blue-100 rounded-full hidden flex items-center gap-2">
-                        <iconify-icon icon="lucide:loader-2" class="animate-spin text-lg"></iconify-icon>
-                        <span id="status-texto">Pronto</span>
-                    </div>
+                <div id="status-busca" class="text-xs text-blue-600 font-medium px-4 py-1.5 bg-blue-50 border border-blue-200 rounded-full hidden flex items-center gap-2 shadow-sm">
+                    <iconify-icon icon="lucide:loader-2" class="animate-spin text-lg"></iconify-icon> <span id="status-texto">Pronto</span>
                 </div>
             </header>
 
-            <!-- Console de Diagnóstico -->
-            <div id="painel-diagnostico" class="hidden bg-slate-900 text-green-400 font-mono text-xs p-4 border-b border-slate-700 max-h-52 overflow-y-auto">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-slate-400 uppercase tracking-wider text-[10px]">Console de Diagnóstico</span>
-                    <button onclick="document.getElementById('painel-diagnostico').classList.add('hidden')" class="text-slate-500 hover:text-white text-xs">✕ fechar</button>
+            <div class="p-6 overflow-y-auto flex-1 flex flex-col">
+                <div id="caixa-erro" class="hidden mb-6 bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-800 shadow-sm">
+                    <h3 class="font-bold flex items-center gap-2 mb-2 text-base"><iconify-icon icon="lucide:alert-octagon"></iconify-icon> Falha Detectada</h3>
+                    <div class="bg-white/60 p-3 rounded border border-red-100 font-mono text-xs text-red-900 break-all" id="log-erro"></div>
                 </div>
-                <div id="log-diagnostico"></div>
-            </div>
 
-            <div class="p-6 overflow-y-auto flex-1">
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-wrap gap-4 items-end">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-end">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Ano da Ata</label>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Ano da Compra</label>
                         <select id="filtro-ano" class="p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 w-32">
-                            <option value="2026" selected>2026</option>
-                            <option value="2025">2025</option>
+                            <option value="2025" selected>2025</option>
                             <option value="2024">2024</option>
                             <option value="2023">2023</option>
                         </select>
                     </div>
                     <div class="flex-1 min-w-[250px]">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Buscar Objeto, Número ou Fornecedor</label>
-                        <input type="text" id="filtro-texto" placeholder="Digite para filtrar..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="filtro-texto" placeholder="Filtrar resultados..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Vínculo</label>
                         <select id="filtro-tipo" class="p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="todas">Todas as Atas</option>
-                            <option value="gerenciadora">Apenas Gerenciadora (UFR)</option>
-                            <option value="participante">Apenas Participante (Externas)</option>
+                            <option value="gerenciadora">Apenas UFR</option>
+                            <option value="participante">Apenas Externas</option>
                         </select>
                     </div>
-                    <div class="flex items-center gap-2 pb-1">
-                        <input type="checkbox" id="mostrar-vencidas" class="w-4 h-4 rounded accent-blue-600">
-                        <label for="mostrar-vencidas" class="text-xs font-semibold text-slate-600 cursor-pointer">Incluir vencidas</label>
-                    </div>
                     <button onclick="carregarAtas()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow flex items-center gap-2">
-                        <iconify-icon icon="lucide:download-cloud"></iconify-icon> Puxar Dados do PNCP
+                        <iconify-icon icon="lucide:download-cloud"></iconify-icon> Puxar Dados
                     </button>
                 </div>
 
-                <!-- Barra de resumo -->
-                <div id="barra-resumo" class="hidden mb-4 px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 flex flex-wrap gap-x-6 gap-y-1 shadow-sm items-center">
-                    <span>📋 Total de atas: <strong id="resumo-total">0</strong></span>
-                    <span>✅ Vigentes: <strong id="resumo-vigentes" class="text-emerald-600">0</strong></span>
-                    <span>⏰ Vencidas: <strong id="resumo-vencidas" class="text-red-500">0</strong></span>
-                    <span class="text-slate-400">🔌 Rota: <strong id="resumo-rota">—</strong></span>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1">
+                    <div class="overflow-x-auto h-full">
                         <table class="w-full text-sm text-left text-slate-600">
-                            <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                            <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200 sticky top-0">
                                 <tr>
-                                    <th class="p-4 font-semibold">Identificação da Ata</th>
+                                    <th class="p-4 font-semibold">Identificação</th>
                                     <th class="p-4 font-semibold w-1/3">Objeto</th>
-                                    <th class="p-4 font-semibold text-center">Status / Prazo</th>
+                                    <th class="p-4 font-semibold text-center">Prazo</th>
                                     <th class="p-4 font-semibold">Fornecedor</th>
                                     <th class="p-4 font-semibold text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-corpo" class="divide-y divide-slate-100">
-                                <tr><td colspan="5" class="p-12 text-center text-slate-400">Clique no botão azul para baixar as atas do ano selecionado.</td></tr>
+                                <tr><td colspan="5" class="p-12 text-center text-slate-400">Clique em Puxar Dados para usar sua ponte do Google.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -129,70 +103,35 @@
             </div>
         </div>
 
-        <div id="mod-contratos" class="modulo-conteudo hidden flex-1 flex flex-col items-center justify-center p-8 text-slate-400">
-            <iconify-icon icon="lucide:hard-hat" class="text-6xl mb-4 text-slate-300"></iconify-icon>
-            <h2 class="text-xl font-bold text-slate-600">Módulo em Construção</h2>
-            <p>Em breve.</p>
-        </div>
-
         <div id="mod-config" class="modulo-conteudo hidden flex-1 flex flex-col h-full overflow-hidden">
             <header class="bg-white border-b border-slate-200 py-4 px-8 shadow-sm shrink-0">
-                <h1 class="text-xl font-bold text-slate-800">Gerenciar Atas Externas (UFR Participante)</h1>
-                <p class="text-xs text-slate-500 mt-1">Registre as atas de outros órgãos que a UFR participa.</p>
+                <h1 class="text-xl font-bold text-slate-800">Atas Externas (Participante)</h1>
             </header>
             <div class="p-8 flex-1 overflow-y-auto">
-                <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl mb-6">
-                    <h3 class="font-bold text-blue-800 mb-3 flex items-center gap-2"><iconify-icon icon="lucide:plus-circle"></iconify-icon> Adicionar Nova Ata Externa</h3>
-                    <div class="flex gap-4 items-end flex-wrap">
-                        <div class="flex-1 min-w-[200px]">
-                            <label class="block text-xs font-semibold text-blue-800 mb-1">CNPJ do Órgão Gerenciador (só números)</label>
-                            <input type="text" id="add-cnpj" placeholder="Ex: 00394460005887" class="w-full p-2.5 border border-blue-200 rounded-lg text-sm outline-none">
-                        </div>
-                        <div class="w-32">
-                            <label class="block text-xs font-semibold text-blue-800 mb-1">Ano Compra</label>
-                            <input type="number" id="add-ano" value="2025" class="w-full p-2.5 border border-blue-200 rounded-lg text-sm outline-none">
-                        </div>
-                        <div class="w-36">
-                            <label class="block text-xs font-semibold text-blue-800 mb-1">Nº Sequencial Compra</label>
-                            <input type="number" id="add-seq" placeholder="Ex: 15" class="w-full p-2.5 border border-blue-200 rounded-lg text-sm outline-none">
-                        </div>
-                        <button onclick="adicionarParticipante()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">Salvar</button>
-                    </div>
+                <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl mb-6 flex gap-4 items-end">
+                    <div class="flex-1"><label class="block text-xs font-bold text-blue-800 mb-1">CNPJ do Gerenciador</label><input type="text" id="add-cnpj" class="w-full p-2.5 border border-blue-200 rounded-lg text-sm"></div>
+                    <div class="w-32"><label class="block text-xs font-bold text-blue-800 mb-1">Ano Compra</label><input type="number" id="add-ano" value="2024" class="w-full p-2.5 border border-blue-200 rounded-lg text-sm"></div>
+                    <div class="w-32"><label class="block text-xs font-bold text-blue-800 mb-1">Nº Compra</label><input type="number" id="add-seq" class="w-full p-2.5 border border-blue-200 rounded-lg text-sm"></div>
+                    <button onclick="adicionarParticipante()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium">Salvar</button>
                 </div>
                 <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-slate-50 text-xs text-slate-500">
-                            <tr><th class="p-3">CNPJ Gerenciador</th><th class="p-3">Ano</th><th class="p-3">Seq. Compra</th><th class="p-3 text-center">Ação</th></tr>
-                        </thead>
-                        <tbody id="lista-participantes" class="divide-y divide-slate-100"></tbody>
-                    </table>
+                    <table class="w-full text-sm text-left"><tbody id="lista-participantes" class="divide-y divide-slate-100"></tbody></table>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- MODAL SALDOS -->
     <div id="modal-itens" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
             <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                <h3 class="text-lg font-bold text-slate-800" id="modal-titulo">Saldos Quantitativos</h3>
+                <h3 class="text-lg font-bold text-slate-800" id="modal-titulo">Saldos para Empenho</h3>
                 <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-700 p-2"><iconify-icon icon="lucide:x" class="text-2xl"></iconify-icon></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6">
-                <div id="loading-itens" class="hidden text-center py-10 text-slate-500">
-                    <iconify-icon icon="lucide:loader-2" class="text-4xl animate-spin mb-2"></iconify-icon>
-                    <p>Buscando saldos...</p>
-                </div>
-                <div id="erro-itens" class="hidden text-center py-8 text-red-500 text-sm"></div>
+                <div id="loading-itens" class="hidden text-center py-10 text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-4xl animate-spin mb-2"></iconify-icon><p>Buscando via Google Script...</p></div>
                 <table id="tabela-itens" class="w-full text-sm text-left border border-slate-200 rounded-lg overflow-hidden hidden">
                     <thead class="bg-slate-50 text-xs text-slate-500">
-                        <tr>
-                            <th class="p-3">Item</th>
-                            <th class="p-3">Descrição</th>
-                            <th class="p-3">UN</th>
-                            <th class="p-3 text-right">R$ Unit.</th>
-                            <th class="p-3 text-center text-blue-700 bg-blue-50 font-bold">Saldo Disponível</th>
-                        </tr>
+                        <tr><th class="p-3">Item</th><th class="p-3">Descrição</th><th class="p-3 text-right">R$ Unit.</th><th class="p-3 text-center text-blue-700 bg-blue-50">Saldo Disponível</th></tr>
                     </thead>
                     <tbody id="corpo-itens" class="divide-y divide-slate-100"></tbody>
                 </table>
@@ -201,421 +140,231 @@
     </div>
 
     <script>
-    // ================================================================
-    // CONFIGURAÇÃO — APIs CORRETAS DO PNCP
-    // ================================================================
-    const CNPJ_UFR = "10673078000169";
+        // =========================================================================
+        // COLOQUE O LINK QUE VOCÊ COPIOU DO GOOGLE AQUI DENTRO DAS ASPAS NA LINHA DE BAIXO:
+        const URL_MEU_PROXY = "COLE_AQUI_O_LINK_DO_GOOGLE_SCRIPT";
+        // =========================================================================
 
-    // API de Consulta Pública: para LISTAR e BUSCAR atas/contratos
-    const CONSULTA_BASE = "https://pncp.gov.br/api/consulta/v1";
+        const CNPJ_UFR = "10673078000169";
+        const API_SISTEMA = "https://pncp.gov.br/api/pncp/v1";
+        let dadosCompletosAtas = [];
 
-    // API de Integração: para buscar ITENS/SALDOS de uma ata específica
-    const INTEGRACAO_BASE = "https://pncp.gov.br/api/pncp/v1";
+        window.onload = () => {
+            atualizarTabelaParticipantes();
+            document.getElementById('filtro-texto').addEventListener('keyup', renderizarTabela);
+            document.getElementById('filtro-tipo').addEventListener('change', renderizarTabela);
+        };
 
-    let dadosCompletosAtas = [];
-    let ROTA_ATIVA = "—";
-
-    // ================================================================
-    // SISTEMA DE FETCH COM MÚLTIPLOS PROXIES
-    // ================================================================
-    const PROXIES = [
-        { nome: "direta",       wrap: u => u },
-        { nome: "corsproxy.io", wrap: u => `https://corsproxy.io/?${encodeURIComponent(u)}` },
-        { nome: "allorigins",   wrap: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}` },
-        { nome: "codetabs",     wrap: u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}` }
-    ];
-
-    async function tentarFetch(reqUrl, ms = 12000) {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), ms);
-        try {
-            const r = await fetch(reqUrl, { signal: ctrl.signal, headers: { Accept: "application/json" } });
-            clearTimeout(t);
-            if ([404, 204, 400].includes(r.status)) return { status: r.status };
-            if (r.ok) {
-                const txt = await r.text();
-                try { return { status: r.status, data: JSON.parse(txt) }; }
-                catch { return { status: r.status, raw: txt.substring(0, 100) }; }
-            }
-            return { status: r.status };
-        } catch (e) {
-            clearTimeout(t);
-            return { status: 0, err: e.message?.substring(0, 60) };
-        }
-    }
-
-    async function fetchSeguro(url, verboso = false) {
-        for (const p of PROXIES) {
-            const r = await tentarFetch(p.wrap(url));
-            if ([404, 204, 400].includes(r.status)) return null;
-            if (r.data !== undefined) {
-                ROTA_ATIVA = p.nome;
-                return r.data;
-            }
-            if (verboso) log(`${p.nome} → ${r.status || r.err || 'sem JSON'} | ${r.raw || ''}`, "warn");
-        }
-        if (verboso) log(`Todas as rotas falharam: ${url}`, "error");
-        return null;
-    }
-
-    // ================================================================
-    // BUSCA PAGINADA NA API DE CONSULTA
-    // ================================================================
-    async function buscarAtasPorPeriodo(cnpj, ano) {
-        // Endpoint correto: /api/consulta/v1/atas?dataInicial=YYYYMMDD&dataFinal=YYYYMMDD&cnpj=CNPJ
-        const dataInicial = `${ano}0101`;
-        const dataFinal   = `${ano}1231`;
-        const TAMANHO = 50;
-        let pagina = 1;
-        let todas = [];
-
-        while (true) {
-            const url = `${CONSULTA_BASE}/atas?dataInicial=${dataInicial}&dataFinal=${dataFinal}&cnpj=${cnpj}&pagina=${pagina}&tamanhoPagina=${TAMANHO}`;
-            const json = await fetchSeguro(url);
-            if (!json) break;
-
-            const lista = Array.isArray(json) ? json : (json.data || []);
-            if (lista.length === 0) break;
-
-            todas = todas.concat(lista);
-            log(`Página ${pagina}: ${lista.length} ata(s) | total acumulado: ${todas.length}`);
-
-            const totalPags = json.totalPaginas || json.paginasTotais || 1;
-            if (lista.length < TAMANHO || pagina >= totalPags) break;
-            pagina++;
-        }
-        return todas;
-    }
-
-    // ================================================================
-    // NORMALIZA O OBJETO DE ATA (campos variam conforme a API)
-    // ================================================================
-    function normalizarAta(a, tipo) {
-        // A API de consulta pode retornar dados em estruturas aninhadas ou planas
-        const cnpj     = a.cnpjOrgao       || a.orgaoEntidade?.cnpj || a.orgao?.cnpj || CNPJ_UFR;
-        const anoC     = a.anoCompra        || a.compra?.anoCompra   || a.ano          || '';
-        const seqC     = a.sequencialCompra || a.compra?.sequencial  || a.sequencial   || '';
-        const objeto   = a.objetoCompra     || a.compra?.objetoCompra || a.objeto       || '';
-        const fornec   = a.nomeRazaoSocialFornecedor || a.fornecedor?.nomeRazaoSocial  || a.razaoSocialFornecedor || '—';
-        const numAta   = a.numeroAta        || a.numero              || a.sequencialAta || '';
-        const seqAta   = a.sequencialAta    || a.sequencial          || '';
-        const fimVig   = a.dataVigenciaFim  || a.vigenciaFim         || a.dataFimVigencia || null;
-
-        return { ...a, _tipo: tipo, _cnpjOrigem: cnpj, _anoCompra: anoC, _seqCompra: seqC,
-                 _objeto: objeto, nomeRazaoSocialFornecedor: fornec,
-                 numeroAta: numAta, sequencialAta: seqAta, dataVigenciaFim: fimVig };
-    }
-
-    // ================================================================
-    // DIAGNÓSTICO
-    // ================================================================
-    function log(msg, tipo = "info") {
-        const cores    = { info: "text-green-400", warn: "text-yellow-300", error: "text-red-400", ok: "text-cyan-300" };
-        const prefixos = { info: "›", warn: "⚠", error: "✗", ok: "✓" };
-        const div = document.getElementById('log-diagnostico');
-        const h   = new Date().toLocaleTimeString('pt-BR');
-        div.innerHTML += `<div class="${cores[tipo] || 'text-green-400'}">[${h}] ${prefixos[tipo]||'›'} ${msg}</div>`;
-        div.scrollTop = div.scrollHeight;
-        console.log(`[UFR] ${msg}`);
-    }
-
-    async function testarConexao() {
-        const painel = document.getElementById('painel-diagnostico');
-        document.getElementById('log-diagnostico').innerHTML = '';
-        painel.classList.remove('hidden');
-
-        log("=== Iniciando diagnóstico ===");
-        log(`API de Consulta: ${CONSULTA_BASE}`);
-        log(`API de Integração: ${INTEGRACAO_BASE}`);
-
-        const anoTeste = new Date().getFullYear();
-        const url = `${CONSULTA_BASE}/atas?dataInicial=${anoTeste}0101&dataFinal=${anoTeste}1231&cnpj=${CNPJ_UFR}&pagina=1&tamanhoPagina=3`;
-        log(`Testando: GET ${url}`);
-
-        const data = await fetchSeguro(url, true);
-
-        if (data !== null) {
-            const lista = Array.isArray(data) ? data : (data.data || []);
-            log(`✅ SUCESSO via [${ROTA_ATIVA}] — ${lista.length} ata(s) retornada(s)`, "ok");
-            if (lista.length > 0) {
-                log(`Campos disponíveis: ${Object.keys(lista[0]).join(', ')}`, "info");
-                log(`Exemplo: ${JSON.stringify(lista[0]).substring(0, 300)}`, "info");
-            } else {
-                log(`Nenhuma ata para o período. Tente outro ano no filtro.`, "warn");
-            }
-        } else {
-            log("❌ FALHA — Nenhuma rota respondeu com JSON válido.", "error");
-            log("Soluções: (1) Abra via Live Server no VS Code  (2) Use extensão CORS no Chrome  (3) Hospede em servidor HTTP.", "warn");
-        }
-    }
-
-    // ================================================================
-    // UI
-    // ================================================================
-    window.onload = () => {
-        atualizarTabelaParticipantes();
-        document.getElementById('filtro-texto').addEventListener('keyup', renderizarTabela);
-        document.getElementById('filtro-tipo').addEventListener('change', renderizarTabela);
-        document.getElementById('mostrar-vencidas').addEventListener('change', renderizarTabela);
-    };
-
-    function abrirModulo(id) {
-        document.querySelectorAll('.modulo-conteudo').forEach(el => el.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-        document.querySelectorAll('.menu-btn').forEach(btn => {
-            btn.classList.remove('bg-blue-500/10','text-blue-400','border-blue-500/20');
-            btn.classList.add('text-slate-300','border-transparent');
-        });
-        const btn = document.getElementById('btn-' + id);
-        btn.classList.remove('text-slate-300','border-transparent');
-        btn.classList.add('bg-blue-500/10','text-blue-400','border-blue-500/20');
-    }
-
-    function setStatus(vis, txt = '') {
-        const el = document.getElementById('status-busca');
-        document.getElementById('status-texto').textContent = txt;
-        vis ? el.classList.remove('hidden') : el.classList.add('hidden');
-    }
-
-    function setProgresso(txt) {
-        setStatus(true, txt);
-        const el = document.getElementById('texto-progresso');
-        if (el) el.textContent = txt;
-    }
-
-    // ================================================================
-    // CARREGAR ATAS — usa API de Consulta correta
-    // ================================================================
-    async function carregarAtas() {
-        const ano = document.getElementById('filtro-ano').value;
-        dadosCompletosAtas = [];
-
-        document.getElementById('tabela-corpo').innerHTML = `
-            <tr><td colspan="5" class="p-10 text-center text-slate-500">
-                <iconify-icon icon="lucide:loader-2" class="text-3xl animate-spin text-blue-500 mb-2 block mx-auto"></iconify-icon>
-                <span id="texto-progresso">Conectando ao PNCP (API de Consulta)...</span>
-            </td></tr>`;
-        document.getElementById('barra-resumo').classList.add('hidden');
-        setStatus(true, "Buscando...");
-
-        // --- Atas da UFR como gerenciadora ---
-        setProgresso(`Buscando atas da UFR em ${ano}...`);
-        const atasUFR = await buscarAtasPorPeriodo(CNPJ_UFR, ano);
-        atasUFR.forEach(a => dadosCompletosAtas.push(normalizarAta(a, 'GERENCIADORA')));
-        log(`UFR: ${atasUFR.length} ata(s) encontrada(s)`);
-
-        // --- Atas externas (UFR participante) ---
-        const externas = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
-        for (const ext of externas) {
-            if (String(ext.ano) !== String(ano)) continue;
-            setProgresso(`Buscando atas externas (CNPJ: ${ext.cnpj})...`);
-            const atasExt = await buscarAtasPorPeriodo(ext.cnpj, ext.ano);
-            atasExt.forEach(a => dadosCompletosAtas.push(normalizarAta(a, 'PARTICIPANTE')));
-            log(`Externo ${ext.cnpj}: ${atasExt.length} ata(s)`);
+        function abrirModulo(idModulo) {
+            document.querySelectorAll('.modulo-conteudo').forEach(el => el.classList.add('hidden'));
+            document.getElementById(idModulo).classList.remove('hidden');
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-500/10', 'text-blue-400', 'border-blue-500/20');
+                btn.classList.add('text-slate-300', 'border-transparent');
+            });
+            const btnAtivo = document.getElementById('btn-' + idModulo);
+            btnAtivo.classList.remove('text-slate-300', 'border-transparent');
+            btnAtivo.classList.add('bg-blue-500/10', 'text-blue-400', 'border-blue-500/20');
         }
 
-        // --- Calcula vigência ---
-        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-        dadosCompletosAtas.forEach(a => {
-            const fimStr = a.dataVigenciaFim;
-            const fim = fimStr ? new Date(fimStr.includes('T') ? fimStr : fimStr + 'T00:00:00') : null;
-            if (fim && !isNaN(fim)) {
-                a._dias   = Math.ceil((fim - hoje) / 86400000);
-                a._vigente = a._dias >= 0;
-            } else {
-                a._vigente = false;
-                a._dias    = -999;
-            }
-        });
+        function setStatus(visivel, texto = "") {
+            const el = document.getElementById('status-busca');
+            document.getElementById('status-texto').textContent = texto;
+            visivel ? el.classList.remove('hidden') : el.classList.add('hidden');
+        }
 
-        // --- Resumo ---
-        const vigentes = dadosCompletosAtas.filter(a => a._vigente).length;
-        const vencidas  = dadosCompletosAtas.length - vigentes;
-        document.getElementById('resumo-total').textContent    = dadosCompletosAtas.length;
-        document.getElementById('resumo-vigentes').textContent = vigentes;
-        document.getElementById('resumo-vencidas').textContent = vencidas;
-        document.getElementById('resumo-rota').textContent     = ROTA_ATIVA;
-        document.getElementById('barra-resumo').classList.remove('hidden');
-
-        if (dadosCompletosAtas.length === 0) {
-            document.getElementById('tabela-corpo').innerHTML = `
-                <tr><td colspan="5" class="p-8 text-center">
-                    <div class="text-amber-600 font-bold mb-2">⚠ Nenhuma ata retornada pela API</div>
-                    <p class="text-slate-500 text-sm max-w-sm mx-auto">
-                        Possíveis causas: CORS bloqueando todas as rotas, ou não há atas registradas para a UFR no período.<br>
-                        Clique em <strong>Diagnóstico</strong> para identificar o problema.
-                    </p>
-                </td></tr>`;
+        function mostrarErro(mensagemLog) {
+            const caixa = document.getElementById('caixa-erro');
+            const log = document.getElementById('log-erro');
+            caixa.classList.remove('hidden');
+            log.innerHTML += `[API PNCP via Google] ${mensagemLog}<br>`;
             setStatus(false);
-            return;
         }
 
-        // Se só há vencidas, ativa o toggle automaticamente
-        if (vigentes === 0 && vencidas > 0) {
-            document.getElementById('mostrar-vencidas').checked = true;
+        async function fetchGoogleProxy(urlGov) {
+            if(URL_MEU_PROXY === "COLE_AQUI_O_LINK_DO_GOOGLE_SCRIPT" || !URL_MEU_PROXY) {
+                return {erro: "Você esqueceu de colar a URL do Google Apps Script no código HTML (Linha 199)."};
+            }
+            
+            try {
+                const urlFinal = URL_MEU_PROXY + "?url=" + encodeURIComponent(urlGov);
+                const resposta = await fetch(urlFinal);
+                const json = await resposta.json();
+                
+                if (json.status && json.status === 404) return { dados: null }; 
+                if (json.erro) return { erro: json.erro };
+                
+                return { dados: json };
+            } catch (e) {
+                return { erro: "Falha de rede ao conectar com o script do Google." };
+            }
         }
 
-        setStatus(false);
-        renderizarTabela();
-    }
+        async function carregarAtas() {
+            const ano = document.getElementById('filtro-ano').value;
+            dadosCompletosAtas = [];
+            document.getElementById('caixa-erro').classList.add('hidden');
+            document.getElementById('log-erro').innerHTML = '';
+            
+            document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-3xl animate-spin text-blue-500 mb-2 block mx-auto"></iconify-icon> Conectando via Servidor Privado...</td></tr>`;
+            setStatus(true, "Buscando compras da UFR...");
 
-    // ================================================================
-    // RENDERIZAR TABELA
-    // ================================================================
-    function renderizarTabela() {
-        const corpo         = document.getElementById('tabela-corpo');
-        const termo         = document.getElementById('filtro-texto').value.toLowerCase();
-        const tipoFiltro    = document.getElementById('filtro-tipo').value;
-        const mostrarVenc   = document.getElementById('mostrar-vencidas').checked;
+            const urlCompras = `${API_SISTEMA}/orgaos/${CNPJ_UFR}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=50`;
+            const resultadoCompras = await fetchGoogleProxy(urlCompras);
 
-        let filtradas = dadosCompletosAtas.filter(a => {
-            if (!mostrarVenc && !a._vigente) return false;
-            if (tipoFiltro === 'gerenciadora' && a._tipo !== 'GERENCIADORA') return false;
-            if (tipoFiltro === 'participante' && a._tipo !== 'PARTICIPANTE') return false;
-            const txt = `${a.numeroAta||''} ${a._objeto||''} ${a.nomeRazaoSocialFornecedor||''}`.toLowerCase();
-            return txt.includes(termo);
-        });
+            if (resultadoCompras.erro) {
+                mostrarErro(resultadoCompras.erro);
+                document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">Busca abortada devido a erro.</td></tr>`;
+                return;
+            }
 
-        filtradas.sort((a, b) => (b._vigente ? 1 : 0) - (a._vigente ? 1 : 0) || a._dias - b._dias);
+            let compras = [];
+            if (Array.isArray(resultadoCompras.dados)) compras = resultadoCompras.dados;
+            else if (resultadoCompras.dados && resultadoCompras.dados.data) compras = resultadoCompras.dados.data;
+            
+            if (compras.length === 0) {
+                document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-amber-600 font-bold">A UFR (Gerenciadora) não publicou nenhuma compra no PNCP no ano de ${ano}.</td></tr>`;
+                setStatus(false);
+                return;
+            }
 
-        if (filtradas.length === 0) {
-            const total = dadosCompletosAtas.length;
-            corpo.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">
-                ${total > 0
-                    ? `${total} ata(s) carregada(s), mas nenhuma passa pelo filtro atual.
-                       <button onclick="document.getElementById('mostrar-vencidas').checked=true;renderizarTabela()"
-                           class="ml-2 text-blue-600 underline text-sm">Mostrar vencidas</button>`
-                    : 'Nenhuma ata encontrada para este filtro.'}
-            </td></tr>`;
-            return;
+            let contador = 1;
+            for (let c of compras) {
+                setStatus(true, `Lendo compra ${contador} de ${compras.length}...`);
+                const urlAtas = `${API_SISTEMA}/orgaos/${CNPJ_UFR}/compras/${ano}/${c.sequencialCompra}/atas`;
+                const resultadoAtas = await fetchGoogleProxy(urlAtas);
+                
+                if (resultadoAtas.dados) {
+                    let listaA = Array.isArray(resultadoAtas.dados) ? resultadoAtas.dados : (resultadoAtas.dados.data || []);
+                    listaA.forEach(a => {
+                        dadosCompletosAtas.push({...a, _tipo: 'GERENCIADORA', _seqCompra: c.sequencialCompra, _anoCompra: ano, _cnpjOrigem: CNPJ_UFR, _objeto: c.objetoCompra});
+                    });
+                }
+                contador++;
+            }
+
+            const externas = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
+            for (let ext of externas) {
+                if (ext.ano === ano) {
+                    setStatus(true, `Lendo Ata Externa (${ext.cnpj})...`);
+                    const resC = await fetchGoogleProxy(`${API_SISTEMA}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}`);
+                    const objE = (resC.dados && resC.dados.objetoCompra) ? resC.dados.objetoCompra : "Objeto não detalhado";
+                    
+                    const resA = await fetchGoogleProxy(`${API_SISTEMA}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}/atas`);
+                    if (resA.dados) {
+                        let listaA = Array.isArray(resA.dados) ? resA.dados : (resA.dados.data || []);
+                        listaA.forEach(a => {
+                            dadosCompletosAtas.push({...a, _tipo: 'PARTICIPANTE', _seqCompra: ext.seq, _anoCompra: ext.ano, _cnpjOrigem: ext.cnpj, _objeto: objE});
+                        });
+                    }
+                }
+            }
+
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            dadosCompletosAtas.forEach(a => {
+                const fim = a.dataVigenciaFim ? new Date(a.dataVigenciaFim) : null;
+                if(fim) {
+                    a._dias = Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
+                    a._vigente = a._dias >= 0;
+                } else { a._vigente = false; a._dias = -999; }
+            });
+
+            setStatus(false);
+            renderizarTabela();
         }
 
-        corpo.innerHTML = filtradas.map(a => {
-            const badge = a._tipo === 'GERENCIADORA'
-                ? `<span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold">UFR GERENCIA</span>`
-                : `<span class="bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded font-bold">UFR PARTICIPA</span>`;
+        function renderizarTabela() {
+            const corpo = document.getElementById('tabela-corpo');
+            const termo = document.getElementById('filtro-texto').value.toLowerCase();
+            const tipoFiltro = document.getElementById('filtro-tipo').value;
+            corpo.innerHTML = '';
+            
+            let filtradas = dadosCompletosAtas.filter(a => {
+                if(!a._vigente) return false;
+                if(tipoFiltro === 'gerenciadora' && a._tipo !== 'GERENCIADORA') return false;
+                if(tipoFiltro === 'participante' && a._tipo !== 'PARTICIPANTE') return false;
+                return `${a.numeroAta||''} ${a._objeto||''} ${a.nomeRazaoSocialFornecedor||''}`.toLowerCase().includes(termo);
+            });
 
-            const badgeVig = a._vigente
-                ? `<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 rounded ml-1">Vigente</span>`
-                : `<span class="text-[10px] bg-red-100 text-red-600 px-1.5 rounded ml-1">Vencida</span>`;
+            filtradas.sort((a,b) => a._dias - b._dias);
 
-            const corDias = a._vigente
-                ? (a._dias <= 60 ? 'text-red-600 font-bold' : a._dias <= 120 ? 'text-amber-600' : 'text-emerald-600')
-                : 'text-slate-400';
+            if(filtradas.length === 0) {
+                corpo.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nenhuma ata vigente encontrada após o processamento.</td></tr>`;
+                return;
+            }
 
-            const diasTxt = a._vigente ? `Vence em ${a._dias} dias` : `Venceu há ${Math.abs(a._dias)} dias`;
-            const dataFim = a.dataVigenciaFim
-                ? new Date((a.dataVigenciaFim.includes('T') ? a.dataVigenciaFim : a.dataVigenciaFim + 'T00:00:00')).toLocaleDateString('pt-BR')
-                : 'N/D';
-
-            const btnSaldos = (a._anoCompra && a._seqCompra && a.sequencialAta)
-                ? `<button onclick="verSaldos('${a._cnpjOrigem}','${a._anoCompra}','${a._seqCompra}','${a.sequencialAta}','${a.numeroAta}')"
-                       class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded text-xs font-bold hover:bg-slate-200 transition">Ver Saldos</button>`
-                : `<span class="text-[10px] text-slate-300">Seq. indisponível</span>`;
-
-            return `<tr class="hover:bg-slate-50 border-b border-slate-100 ${!a._vigente ? 'opacity-60' : ''}">
-                <td class="p-4 align-top">
-                    <div class="font-bold text-slate-800 mb-1">Ata ${a.numeroAta || '—'}/${a._anoCompra || '—'}</div>
-                    <div>${badge}${badgeVig}</div>
-                </td>
-                <td class="p-4 align-top text-xs" title="${a._objeto}">${(a._objeto||'').substring(0,90)}${a._objeto?.length>90?'...':''}</td>
-                <td class="p-4 align-top text-center text-xs">
-                    <div class="${corDias}">${diasTxt}</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">Até ${dataFim}</div>
-                </td>
-                <td class="p-4 align-top text-xs">${a.nomeRazaoSocialFornecedor}</td>
-                <td class="p-4 align-top text-center">${btnSaldos}</td>
-            </tr>`;
-        }).join('');
-    }
-
-    // ================================================================
-    // SALDOS DE ITENS — usa API de Integração para GET de recurso único
-    // ================================================================
-    async function verSaldos(cnpj, ano, seqCompra, seqAta, numAta) {
-        document.getElementById('modal-itens').classList.remove('opacity-0', 'pointer-events-none');
-        document.getElementById('modal-titulo').textContent = `Saldos — Ata ${numAta}/${ano}`;
-        document.getElementById('loading-itens').classList.remove('hidden');
-        document.getElementById('tabela-itens').classList.add('hidden');
-        document.getElementById('erro-itens').classList.add('hidden');
-        document.getElementById('corpo-itens').innerHTML = '';
-
-        // Tenta API de integração para itens da ata
-        const url = `${INTEGRACAO_BASE}/orgaos/${cnpj}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`;
-        const itens = await fetchSeguro(url);
-        const lista = itens ? (Array.isArray(itens) ? itens : (itens.data || [])) : [];
-
-        document.getElementById('loading-itens').classList.add('hidden');
-
-        if (!itens) {
-            const err = document.getElementById('erro-itens');
-            err.innerHTML = `❌ Não foi possível carregar os itens.<br><span class="text-xs text-slate-400">${url}</span>`;
-            err.classList.remove('hidden');
-            return;
+            filtradas.forEach(a => {
+                const badge = a._tipo === 'GERENCIADORA' ? `<span class="bg-blue-100 text-blue-800 text-[10px] px-2 rounded font-bold">UFR GERENCIA</span>` : `<span class="bg-purple-100 text-purple-800 text-[10px] px-2 rounded font-bold">UFR PARTICIPA</span>`;
+                let cor = a._dias <= 60 ? 'text-red-600 font-bold' : (a._dias <= 120 ? 'text-amber-600' : 'text-emerald-600');
+                
+                corpo.innerHTML += `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100">
+                        <td class="p-4 align-top"><div class="font-bold mb-1">Ata ${a.numeroAta || a.sequencialAta}/${a._anoCompra}</div>${badge}</td>
+                        <td class="p-4 align-top text-xs">${(a._objeto||'').substring(0,80)}...</td>
+                        <td class="p-4 align-top text-center text-xs"><span class="${cor}">Vence em ${a._dias} dias</span><br><span class="text-[10px] text-slate-400">Até ${new Date(a.dataVigenciaFim).toLocaleDateString('pt-BR')}</span></td>
+                        <td class="p-4 align-top text-xs">${a.nomeRazaoSocialFornecedor}</td>
+                        <td class="p-4 align-top text-center"><button onclick="verSaldos('${a._cnpjOrigem}', '${a._anoCompra}', '${a._seqCompra}', '${a.sequencialAta}')" class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded text-xs font-bold hover:bg-slate-200">Ver Saldos</button></td>
+                    </tr>`;
+            });
         }
 
-        if (lista.length === 0) {
-            document.getElementById('corpo-itens').innerHTML =
-                `<tr><td colspan="5" class="p-6 text-center text-slate-400">Nenhum item cadastrado nesta ata.</td></tr>`;
-        } else {
-            document.getElementById('corpo-itens').innerHTML = lista.map(i => {
-                const qtd   = i.quantidadeRegistrada || i.quantidade || 0;
-                const saldo = i.quantidadeSaldo ?? i.saldoQuantidade ?? qtd;
-                const vUnit = (i.valorUnitario || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-                const desc  = i.descricao || i.materialServico?.descricao || i.itemCatalogo?.descricao || '—';
-                return `<tr class="border-b border-slate-100 hover:bg-slate-50">
-                    <td class="p-3 text-center text-xs text-slate-500">${i.numeroItem ?? '—'}</td>
-                    <td class="p-3 text-xs font-medium">${desc}</td>
-                    <td class="p-3 text-xs">${i.unidadeMedida || 'UN'}</td>
-                    <td class="p-3 text-right text-xs">R$ ${vUnit}</td>
-                    <td class="p-3 text-center font-bold text-sm bg-blue-50/50 text-blue-700">${saldo}</td>
-                </tr>`;
-            }).join('');
+        async function verSaldos(cnpj, ano, seqCompra, seqAta) {
+            document.getElementById('modal-itens').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('loading-itens').classList.remove('hidden');
+            document.getElementById('tabela-itens').classList.add('hidden');
+            const tbody = document.getElementById('corpo-itens');
+            tbody.innerHTML = '';
+
+            const res = await fetchGoogleProxy(`${API_SISTEMA}/orgaos/${cnpj}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`);
+            
+            if(res.erro) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500">Erro ao baixar itens via Google.</td></tr>`;
+            } else {
+                let itens = Array.isArray(res.dados) ? res.dados : (res.dados ? res.dados.data : []);
+                itens.forEach(i => {
+                    const saldo = i.quantidadeSaldo != null ? i.quantidadeSaldo : (i.saldoQuantidade != null ? i.saldoQuantidade : (i.quantidadeRegistrada || 0));
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100">
+                            <td class="p-3 text-center text-xs text-slate-500">${i.numeroItem}</td>
+                            <td class="p-3 text-xs">${i.descricao || i.materialServico?.descricao || '-'}</td>
+                            <td class="p-3 text-right text-xs">R$ ${(i.valorUnitario||0).toLocaleString('pt-BR')}</td>
+                            <td class="p-3 text-center font-bold text-sm bg-blue-50/50 text-blue-700">${saldo}</td>
+                        </tr>`;
+                });
+            }
+            
+            document.getElementById('loading-itens').classList.add('hidden');
+            document.getElementById('tabela-itens').classList.remove('hidden');
         }
 
-        document.getElementById('tabela-itens').classList.remove('hidden');
-    }
+        function fecharModal() { document.getElementById('modal-itens').classList.add('opacity-0', 'pointer-events-none'); }
 
-    function fecharModal() {
-        document.getElementById('modal-itens').classList.add('opacity-0', 'pointer-events-none');
-    }
+        function adicionarParticipante() {
+            const cnpj = document.getElementById('add-cnpj').value.replace(/\D/g, '');
+            const ano = document.getElementById('add-ano').value;
+            const seq = document.getElementById('add-seq').value;
+            if(!cnpj || !ano || !seq) return alert("Preencha todos os campos.");
+            
+            const ext = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
+            ext.push({cnpj, ano, seq});
+            localStorage.setItem('ufr_atas_participantes', JSON.stringify(ext));
+            document.getElementById('add-cnpj').value = ''; document.getElementById('add-seq').value = '';
+            atualizarTabelaParticipantes();
+            alert("Ata salva! Volte à pesquisa e clique em Puxar Dados.");
+        }
 
-    // ================================================================
-    // PARTICIPANTES EXTERNOS
-    // ================================================================
-    function adicionarParticipante() {
-        const cnpj = document.getElementById('add-cnpj').value.replace(/\D/g, '');
-        const ano  = document.getElementById('add-ano').value;
-        const seq  = document.getElementById('add-seq').value;
-        if (!cnpj || !ano || !seq) return alert("Preencha todos os campos.");
-        const lista = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
-        if (lista.some(e => e.cnpj===cnpj && e.ano===ano && e.seq===seq)) return alert("Já registrada.");
-        lista.push({ cnpj, ano, seq });
-        localStorage.setItem('ufr_atas_participantes', JSON.stringify(lista));
-        document.getElementById('add-cnpj').value = '';
-        document.getElementById('add-seq').value  = '';
-        atualizarTabelaParticipantes();
-        alert("Ata registrada! Volte ao módulo de Pesquisa e clique em 'Puxar Dados'.");
-    }
-
-    function atualizarTabelaParticipantes() {
-        const lista = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
-        document.getElementById('lista-participantes').innerHTML = lista.length === 0
-            ? `<tr><td colspan="4" class="p-4 text-center text-slate-400 text-xs">Nenhuma ata externa configurada.</td></tr>`
-            : lista.map((e, i) => `<tr>
-                <td class="p-3 font-mono text-xs">${e.cnpj}</td>
-                <td class="p-3 text-xs">${e.ano}</td>
-                <td class="p-3 text-xs">Compra Nº ${e.seq}</td>
-                <td class="p-3 text-center"><button onclick="removerParticipante(${i})" class="text-red-500 text-xs font-bold hover:underline">Remover</button></td>
-            </tr>`).join('');
-    }
-
-    function removerParticipante(i) {
-        const lista = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
-        lista.splice(i, 1);
-        localStorage.setItem('ufr_atas_participantes', JSON.stringify(lista));
-        atualizarTabelaParticipantes();
-    }
+        function atualizarTabelaParticipantes() {
+            const ext = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
+            const tbody = document.getElementById('lista-participantes');
+            tbody.innerHTML = ext.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400 text-xs">Vazio.</td></tr>` : '';
+            ext.forEach((e, i) => tbody.innerHTML += `<tr><td class="p-3 text-xs font-mono">${e.cnpj}</td><td class="p-3 text-xs">${e.ano}</td><td class="p-3 text-xs">Seq: ${e.seq}</td><td class="p-3"><button onclick="removerParticipante(${i})" class="text-red-500 text-xs font-bold">Remover</button></td></tr>`);
+        }
+        function removerParticipante(i) {
+            let ext = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
+            ext.splice(i, 1);
+            localStorage.setItem('ufr_atas_participantes', JSON.stringify(ext));
+            atualizarTabelaParticipantes();
+        }
     </script>
 </body>
 </html>
