@@ -95,7 +95,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-corpo" class="divide-y divide-slate-100">
-                                <tr><td colspan="5" class="p-12 text-center text-slate-400">Clique em Puxar Dados para usar sua ponte do Google.</td></tr>
+                                <tr><td colspan="5" class="p-12 text-center text-slate-400">Pronto para buscar os dados oficiais da UFR.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -140,10 +140,8 @@
     </div>
 
     <script>
-        // =========================================================================
-        // COLOQUE O LINK QUE VOCÊ COPIOU DO GOOGLE AQUI DENTRO DAS ASPAS NA LINHA DE BAIXO:
-        const URL_MEU_PROXY = "COLE_AQUI_O_LINK_DO_GOOGLE_SCRIPT";
-        // =========================================================================
+        // O SEU LINK DO GOOGLE JÁ ESTÁ COLADO AQUI EMBAIXO:
+        const URL_MEU_PROXY = "https://script.google.com/macros/s/AKfycbwSA4GRwESb9gxNSJ_0dq5p3zoEtdTxQdYneI9LqxeoNmdz9hqlcr9KQ4nx03uAvN1P5g/exec";
 
         const CNPJ_UFR = "10673078000169";
         const API_SISTEMA = "https://pncp.gov.br/api/pncp/v1";
@@ -182,10 +180,6 @@
         }
 
         async function fetchGoogleProxy(urlGov) {
-            if(URL_MEU_PROXY === "COLE_AQUI_O_LINK_DO_GOOGLE_SCRIPT" || !URL_MEU_PROXY) {
-                return {erro: "Você esqueceu de colar a URL do Google Apps Script no código HTML (Linha 199)."};
-            }
-            
             try {
                 const urlFinal = URL_MEU_PROXY + "?url=" + encodeURIComponent(urlGov);
                 const resposta = await fetch(urlFinal);
@@ -196,7 +190,7 @@
                 
                 return { dados: json };
             } catch (e) {
-                return { erro: "Falha de rede ao conectar com o script do Google." };
+                return { erro: "Falha de rede ao conectar com o script do Google. Verifique se a URL está correta." };
             }
         }
 
