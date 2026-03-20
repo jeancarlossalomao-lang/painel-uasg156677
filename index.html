@@ -1,102 +1,60 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Painel de Contratações — UASG 156677 (UFR)</title>
+  <title>Painel UFR — Contratações Públicas</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; }
-    header {
-      background: #1a5276;
-      color: white;
-      padding: 24px 32px;
-      display: flex
-      align-items: center;
-      gap: 16px;
-    }
-    header img { height: 52px; }
-    header div h1 { font-size: 1.4rem; }
-    header div p { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
-    .container { max-width: 1100px; margin: 32px auto; padding: 0 16px; }
-    .cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
-    .card {
-      background: white;
-      border-radius: 10px;
-      padding: 20px 24px;
-      flex: 1;
-      min-width: 180px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      text-align: center;
-    }
-    .card .num { font-size: 2rem; font-weight: bold; color: #1a5276; }
-    .card .label { font-size: 0.85rem; color: #777; margin-top: 4px; }
-    .filters {
-      background: white;
-      border-radius: 10px;
-      padding: 16px 20px;
-      margin-bottom: 20px;
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-    }
-    .filters select, .filters input {
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-    .filters button {
-      padding: 8px 20px;
-      background: #1a5276;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-    .filters button:hover { background: #154360; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-    }
-    thead { background: #1a5276; color: white; }
-    th, td { padding: 12px 14px; text-align: left; font-size: 0.88rem; }
-    tr:nth-child(even) { background: #f8f9fa; }
-    tr:hover { background: #eaf2ff; }
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 0.78rem;
-      font-weight: bold;
-    }
-    .badge-verde { background: #d4efdf; color: #1e8449; }
-    .badge-azul  { background: #d6eaf8; color: #1a5276; }
-    .badge-cinza { background: #eaecee; color: #555; }
-    .badge-amarelo { background: #fef9e7; color: #b7950b; }
-    a.btn-link {
-      color: #1a5276;
-      font-weight: bold;
-      text-decoration: none;
-      font-size: 0.82rem;
-    }
-    a.btn-link:hover { text-decoration: underline; }
-    #loading { text-align: center; padding: 40px; color: #888; font-size: 1rem; }
-    #erro { text-align: center; padding: 20px; color: #c0392b; display: none; }
-    footer {
-      text-align: center;
-      padding: 24px;
-      color: #aaa;
-      font-size: 0.8rem;
-      margin-top: 32px;
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#333}
+    header{background:#1a5276;color:white;padding:20px 32px;display:flex;align-items:center;gap:16px}
+    header img{height:48px}
+    header h1{font-size:1.3rem}
+    header p{font-size:0.82rem;opacity:.8;margin-top:3px}
+    nav{background:#154360;display:flex;gap:4px;padding:0 32px}
+    nav button{background:none;border:none;color:#aed6f1;padding:12px 18px;cursor:pointer;font-size:.9rem;border-bottom:3px solid transparent}
+    nav button.ativo{color:white;border-bottom:3px solid #3498db}
+    nav button:hover{color:white}
+    .modulo{display:none;max-width:1100px;margin:28px auto;padding:0 16px}
+    .modulo.ativo{display:block}
+    .secao-titulo{font-size:1.1rem;font-weight:bold;color:#1a5276;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #d6eaf8}
+    .filtros{background:white;border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+    .filtros select,.filtros input{padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:.9rem}
+    .filtros input{min-width:220px}
+    .btn{padding:8px 20px;background:#1a5276;color:white;border:none;border-radius:6px;cursor:pointer;font-size:.9rem}
+    .btn:hover{background:#154360}
+    .btn-cinza{background:#7f8c8d}
+    .btn-verde{background:#1e8449}
+    .cards{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+    .card{background:white;border-radius:10px;padding:18px 22px;flex:1;min-width:160px;box-shadow:0 2px 8px rgba(0,0,0,.07);text-align:center}
+    .card .num{font-size:1.8rem;font-weight:bold;color:#1a5276}
+    .card .label{font-size:.82rem;color:#777;margin-top:4px}
+    table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+    thead{background:#1a5276;color:white}
+    th,td{padding:11px 13px;text-align:left;font-size:.86rem}
+    tr:nth-child(even){background:#f8f9fa}
+    tr:hover{background:#eaf2ff}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.76rem;font-weight:bold}
+    .badge-verde{background:#d4efdf;color:#1e8449}
+    .badge-azul{background:#d6eaf8;color:#1a5276}
+    .badge-cinza{background:#eaecee;color:#555}
+    .badge-amarelo{background:#fef9e7;color:#b7950b}
+    .badge-vermelho{background:#fadbd8;color:#c0392b}
+    a.lnk{color:#1a5276;font-weight:bold;text-decoration:none;font-size:.82rem}
+    a.lnk:hover{text-decoration:underline}
+    .info{text-align:center;padding:30px;color:#888;font-size:.95rem}
+    .erro{text-align:center;padding:20px;color:#c0392b;display:none}
+    .loading{text-align:center;padding:30px;color:#888;display:none}
+    .detalhe-box{background:white;border-radius:10px;padding:20px;margin-top:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);display:none}
+    .detalhe-box h3{color:#1a5276;margin-bottom:12px}
+    .grid-info{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:16px}
+    .info-item{background:#f8f9fa;border-radius:8px;padding:12px 14px}
+    .info-item .rotulo{font-size:.78rem;color:#888;margin-bottom:3px}
+    .info-item .valor{font-size:.92rem;font-weight:600;color:#333}
+    .progress-bar-wrap{background:#eee;border-radius:10px;height:16px;margin-top:4px;overflow:hidden}
+    .progress-bar{background:#1e8449;height:100%;border-radius:10px;transition:width .5s}
+    footer{text-align:center;padding:24px;color:#aaa;font-size:.78rem;margin-top:32px}
+    @media(max-width:600px){nav{flex-wrap:wrap}nav button{padding:10px 12px;font-size:.82rem}}
   </style>
 </head>
 <body>
@@ -104,242 +62,311 @@
 <header>
   <img src="https://www.gov.br/++theme++padrao_govbr/img/govbr-logo-large.png" alt="Gov.br" onerror="this.style.display='none'"/>
   <div>
-    <h1>🏛️ Painel de Contratações Públicas</h1>
-    <p>UASG 156677 — Universidade Federal de Rondonópolis (UFR) | Dados: PNCP / Compras.gov.br</p>
+    <h1>🏛️ Painel de Contratações Públicas — UFR</h1>
+    <p>UASG 156677 — Universidade Federal de Rondonópolis | Dados: PNCP</p>
   </div>
 </header>
 
-<div class="container">
+<nav>
+  <button class="ativo" onclick="trocarModulo('atas',this)">📋 Atas de Registro de Preços</button>
+  <button onclick="trocarModulo('em-breve',this)">📄 Contratos (em breve)</button>
+  <button onclick="trocarModulo('em-breve',this)">🔍 Licitações (em breve)</button>
+</nav>
 
-  <div class="cards">
-    <div class="card">
-      <div class="num" id="total-licit">—</div>
-      <div class="label">Licitações encontradas</div>
-    </div>
-    <div class="card">
-      <div class="num" id="total-abertas">—</div>
-      <div class="label">Em andamento</div>
-    </div>
-    <div class="card">
-      <div class="num" id="total-homolog">—</div>
-      <div class="label">Homologadas / Encerradas</div>
-    </div>
-    <div class="card">
-      <div class="num" id="ano-filtro">2025</div>
-      <div class="label">Ano selecionado</div>
-    </div>
-  </div>
+<!-- MÓDULO: ATAS -->
+<div id="mod-atas" class="modulo ativo">
+  <p class="secao-titulo">📋 Atas de Registro de Preços — UASG 156677 (UFR)</p>
 
-  <div class="filters">
-    <label><strong>Ano:</strong></label>
-    <select id="sel-ano">
+  <div class="filtros">
+    <label><strong>Ano da compra:</strong></label>
+    <select id="ata-ano">
       <option value="2026">2026</option>
       <option value="2025" selected>2025</option>
       <option value="2024">2024</option>
       <option value="2023">2023</option>
     </select>
-    <label><strong>Modalidade:</strong></label>
-    <select id="sel-modalidade">
-      <option value="">Todas</option>
-      <option value="6">Pregão Eletrônico</option>
-      <option value="8">Dispensa Eletrônica</option>
-      <option value="4">Concorrência Eletrônica</option>
-    </select>
-    <button onclick="buscarDados()">🔍 Buscar</button>
-    <button onclick="limpar()" style="background:#7f8c8d;">✕ Limpar</button>
+    <label><strong>Nº Sequencial (opcional):</strong></label>
+    <input type="number" id="ata-seq" placeholder="Ex: 1, 2, 3..." min="1"/>
+    <button class="btn" onclick="buscarAtas()">🔍 Buscar Atas</button>
+    <button class="btn btn-cinza" onclick="limparAtas()">✕ Limpar</button>
   </div>
 
-  <div id="loading">⏳ Carregando dados do PNCP...</div>
-  <div id="erro">❌ Não foi possível carregar os dados. Verifique sua conexão ou tente novamente.</div>
+  <div class="cards">
+    <div class="card"><div class="num" id="card-total-atas">—</div><div class="label">Atas encontradas</div></div>
+    <div class="card"><div class="num" id="card-vigentes">—</div><div class="label">Vigentes</div></div>
+    <div class="card"><div class="num" id="card-encerradas">—</div><div class="label">Encerradas</div></div>
+    <div class="card"><div class="num" id="card-ano-atas">2025</div><div class="label">Ano selecionado</div></div>
+  </div>
 
-  <table id="tabela" style="display:none;">
+  <div id="loading-atas" class="loading">⏳ Buscando atas no PNCP...</div>
+  <div id="erro-atas" class="erro">❌ Erro ao buscar atas. <a href="https://pncp.gov.br/app/atas" target="_blank">Acesse o PNCP diretamente</a>.</div>
+
+  <table id="tabela-atas" style="display:none">
     <thead>
       <tr>
         <th>#</th>
-        <th>Nº / Ano</th>
-        <th>Modalidade</th>
+        <th>Nº Ata / Ano</th>
         <th>Objeto</th>
+        <th>Vigência</th>
         <th>Situação</th>
-        <th>Data Publicação</th>
-        <th>Links</th>
+        <th>Ações</th>
       </tr>
     </thead>
-    <tbody id="corpo-tabela"></tbody>
+    <tbody id="corpo-atas"></tbody>
   </table>
 
+  <!-- DETALHE DA ATA -->
+  <div id="detalhe-ata" class="detalhe-box">
+    <h3 id="detalhe-ata-titulo">Detalhes da Ata</h3>
+    <div class="grid-info" id="detalhe-ata-info"></div>
+
+    <p style="font-weight:bold;color:#1a5276;margin-bottom:10px">📦 Itens da Ata</p>
+    <div id="loading-itens" class="loading">⏳ Carregando itens...</div>
+    <table id="tabela-itens" style="display:none;margin-bottom:20px">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Descrição</th>
+          <th>Unidade</th>
+          <th>Qtd. Registrada</th>
+          <th>Valor Unit.</th>
+          <th>Valor Total</th>
+          <th>Saldo Qtd.</th>
+          <th>Saldo %</th>
+        </tr>
+      </thead>
+      <tbody id="corpo-itens"></tbody>
+    </table>
+    <div id="info-saldo" style="background:#eaf2ff;border-radius:8px;padding:14px;margin-bottom:12px;display:none">
+      <strong>ℹ️ Sobre o Saldo:</strong> O saldo exibido é o <strong>saldo quantitativo</strong> disponível na ata conforme registrado no PNCP.
+      O saldo financeiro de empenho está disponível no SIAFI/Tesouro Gerencial, acessível internamente pela UFR.
+    </div>
+    <button class="btn btn-cinza" onclick="fecharDetalhe()">✕ Fechar detalhes</button>
+  </div>
+</div>
+
+<!-- MÓDULO EM BREVE -->
+<div id="mod-em-breve" class="modulo">
+  <div class="info">🚧 Módulo em desenvolvimento. Em breve disponível!</div>
 </div>
 
 <footer>
-  Dados públicos obtidos via API do <a href="https://pncp.gov.br" target="_blank">Portal Nacional de Contratações Públicas (PNCP)</a> e <a href="https://compras.gov.br" target="_blank">Compras.gov.br</a>.<br/>
-  UASG 156677 — Universidade Federal de Rondonópolis (UFR). Atualização automática a cada busca.
+  Dados públicos via <a href="https://pncp.gov.br" target="_blank">PNCP</a> — UASG 156677 / UFR | CNPJ: 10.673.078/0001-69
 </footer>
 
 <script>
-  const UASG = "156677";
-  const CNPJ_UFR = "10673078000169"; // CNPJ da UFR para PNCP
+  const CNPJ = "10673078000169";
+  const BASE = "https://pncp.gov.br/api/pncp/v1";
 
-  const modalidades = {
-    1: "Leilão Eletrônico",
-    2: "Diálogo Competitivo",
-    3: "Concurso",
-    4: "Concorrência Eletrônica",
-    5: "Concorrência Presencial",
-    6: "Pregão Eletrônico",
-    7: "Pregão Presencial",
-    8: "Dispensa Eletrônica",
-    9: "Inexigibilidade",
-    10: "Manifestação de Interesse",
-    11: "Pré-qualificação",
-    12: "Credenciamento",
-    13: "Leilão Presencial"
-  };
+  function trocarModulo(id, btn) {
+    document.querySelectorAll('.modulo').forEach(m => m.classList.remove('ativo'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('ativo'));
+    document.getElementById('mod-' + id).classList.add('ativo');
+    btn.classList.add('ativo');
+  }
 
-  const situacoes = {
-    1: { label: "Divulgada no PNCP", cor: "badge-azul" },
-    2: { label: "Em andamento", cor: "badge-amarelo" },
-    3: { label: "Encerrada", cor: "badge-cinza" },
-    4: { label: "Suspensa", cor: "badge-cinza" },
-    5: { label: "Cancelada", cor: "badge-cinza" },
-    6: { label: "Homologada", cor: "badge-verde" },
-    7: { label: "Deserta/Fracassada", cor: "badge-cinza" },
-    8: { label: "Anulada", cor: "badge-cinza" }
-  };
+  function fmt(v) {
+    if (v == null) return '—';
+    return Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
 
-  async function buscarDados() {
-    const ano = document.getElementById("sel-ano").value;
-    const modalidade = document.getElementById("sel-modalidade").value;
-    document.getElementById("ano-filtro").textContent = ano;
-    document.getElementById("loading").style.display = "block";
-    document.getElementById("tabela").style.display = "none";
-    document.getElementById("erro").style.display = "none";
+  function fmtData(d) {
+    if (!d) return '—';
+    return d.substring(0,10).split('-').reverse().join('/');
+  }
+
+  // ========== ATAS ==========
+  async function buscarAtas() {
+    const ano = document.getElementById('ata-ano').value;
+    const seq = document.getElementById('ata-seq').value.trim();
+    document.getElementById('card-ano-atas').textContent = ano;
+    document.getElementById('loading-atas').style.display = 'block';
+    document.getElementById('erro-atas').style.display = 'none';
+    document.getElementById('tabela-atas').style.display = 'none';
+    document.getElementById('detalhe-ata').style.display = 'none';
 
     try {
-      // API pública do PNCP por CNPJ do órgão
-      let url = `https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?dataInicial=${ano}0101&dataFinal=${ano}1231&cnpjOrgao=${CNPJ_UFR}&pagina=1&tamanhoPagina=50`;
-      if (modalidade) url += `&codigoModalidadeContratacao=${modalidade}`;
+      let atas = [];
 
-      const resp = await fetch(url, {
-        headers: { "Accept": "application/json" }
-      });
+      if (seq) {
+        // Busca atas de uma compra específica
+        const url = `${BASE}/orgaos/${CNPJ}/compras/${ano}/${seq}/atas`;
+        const r = await fetch(url);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const j = await r.json();
+        atas = Array.isArray(j) ? j : (j.data || []);
+        // Adiciona o sequencial da compra em cada ata
+        atas = atas.map(a => ({...a, _seqCompra: seq, _ano: ano}));
+      } else {
+        // Busca compras do órgão no ano e depois as atas de cada uma
+        const urlCompras = `${BASE}/orgaos/${CNPJ}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=50`;
+        const rC = await fetch(urlCompras);
+        if (!rC.ok) throw new Error('HTTP ' + rC.status);
+        const jC = await rC.json();
+        const compras = Array.isArray(jC) ? jC : (jC.data || []);
 
-      if (!resp.ok) throw new Error("Erro na API");
-
-      const dados = await resp.json();
-      const lista = dados.data || dados || [];
-
-      renderTabela(lista, ano);
-    } catch (e) {
-      // fallback: tenta API alternativa do compras.gov
-      try {
-        const url2 = `https://compras.dados.gov.br/licitacoes/v1/licitacoes.json?coduasg=${UASG}&ano=${ano}&_limit=50`;
-        const resp2 = await fetch(url2);
-        const dados2 = await resp2.json();
-        const lista2 = dados2._embedded?.licitacoes || [];
-        renderTabelaLegado(lista2, ano);
-      } catch(e2) {
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("erro").style.display = "block";
+        for (const c of compras) {
+          try {
+            const urlA = `${BASE}/orgaos/${CNPJ}/compras/${ano}/${c.sequencialCompra}/atas`;
+            const rA = await fetch(urlA);
+            if (!rA.ok) continue;
+            const jA = await rA.json();
+            const lista = Array.isArray(jA) ? jA : (jA.data || []);
+            lista.forEach(a => atas.push({...a, _seqCompra: c.sequencialCompra, _ano: ano, _objetoCompra: c.objetoCompra}));
+          } catch(e) {}
+        }
       }
+
+      renderAtas(atas);
+    } catch(e) {
+      document.getElementById('loading-atas').style.display = 'none';
+      document.getElementById('erro-atas').style.display = 'block';
+      console.error(e);
     }
   }
 
-  function renderTabela(lista, ano) {
-    const corpo = document.getElementById("corpo-tabela");
-    corpo.innerHTML = "";
-    document.getElementById("loading").style.display = "none";
+  function renderAtas(atas) {
+    document.getElementById('loading-atas').style.display = 'none';
+    const corpo = document.getElementById('corpo-atas');
+    corpo.innerHTML = '';
 
-    if (!lista.length) {
-      corpo.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">Nenhum resultado encontrado para ${ano}.</td></tr>`;
-      document.getElementById("tabela").style.display = "table";
-      document.getElementById("total-licit").textContent = "0";
-      document.getElementById("total-abertas").textContent = "0";
-      document.getElementById("total-homolog").textContent = "0";
+    if (!atas.length) {
+      corpo.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#888">Nenhuma ata encontrada para os filtros selecionados.</td></tr>';
+      document.getElementById('card-total-atas').textContent = '0';
+      document.getElementById('card-vigentes').textContent = '0';
+      document.getElementById('card-encerradas').textContent = '0';
+      document.getElementById('tabela-atas').style.display = 'table';
       return;
     }
 
-    let abertas = 0, homolog = 0;
-    lista.forEach((item, i) => {
-      const sit = situacoes[item.situacaoCompraId] || { label: "—", cor: "badge-cinza" };
-      if ([1,2].includes(item.situacaoCompraId)) abertas++;
-      if ([6].includes(item.situacaoCompraId)) homolog++;
+    let vigentes = 0, encerradas = 0;
+    const hoje = new Date();
 
-      const modal = modalidades[item.modalidadeId] || "—";
-      const data = item.dataPublicacaoPncp ? item.dataPublicacaoPncp.substring(0,10) : "—";
-      const objeto = item.objetoCompra ? item.objetoCompra.substring(0,120) + (item.objetoCompra.length > 120 ? "..." : "") : "—";
-      const numSeq = item.sequencialCompra || "—";
-      const linkPNCP = item.linkSistemaOrigem || `https://pncp.gov.br/app/editais/${CNPJ_UFR}/${ano}/${numSeq}`;
+    atas.forEach((a, i) => {
+      const fimVig = a.dataVigenciaFim ? new Date(a.dataVigenciaFim) : null;
+      const vigente = fimVig && fimVig >= hoje;
+      if (vigente) vigentes++; else encerradas++;
+
+      const badgeCor = vigente ? 'badge-verde' : 'badge-cinza';
+      const badgeLabel = vigente ? 'Vigente' : 'Encerrada';
+      const objeto = (a.objetoCompra || a._objetoCompra || '—').substring(0, 100);
 
       corpo.innerHTML += `
         <tr>
           <td>${i+1}</td>
-          <td><strong>${numSeq}/${ano}</strong></td>
-          <td>${modal}</td>
-          <td title="${item.objetoCompra || ''}">${objeto}</td>
-          <td><span class="badge ${sit.cor}">${sit.label}</span></td>
-          <td>${data}</td>
+          <td><strong>${a.numeroAta || a.sequencialAta || '—'}/${a._ano}</strong><br/><small style="color:#888">Compra: ${a._seqCompra}/${a._ano}</small></td>
+          <td title="${(a.objetoCompra||a._objetoCompra||'').replace(/"/g,'')}">${objeto}${objeto.length>=100?'...':''}</td>
+          <td>${fmtData(a.dataVigenciaInicio)} a<br/>${fmtData(a.dataVigenciaFim)}</td>
+          <td><span class="badge ${badgeCor}">${badgeLabel}</span></td>
           <td>
-            <a class="btn-link" href="${linkPNCP}" target="_blank">🔗 PNCP</a><br/>
-            <a class="btn-link" href="https://www.gov.br/compras/edital/${UASG}-6-${String(numSeq).padStart(5,'0')}-${ano}" target="_blank">📄 Compras</a>
+            <button class="btn" style="padding:5px 10px;font-size:.8rem" onclick="verDetalheAta('${a._seqCompra}','${a._ano}','${a.sequencialAta}','${(a.objetoCompra||a._objetoCompra||'').replace(/'/g,'')}')">🔍 Ver itens</button>
+            <br/><a class="lnk" href="https://pncp.gov.br/app/atas/${CNPJ}/${a._ano}/${a._seqCompra}/${a.sequencialAta}" target="_blank">🔗 PNCP</a>
           </td>
         </tr>`;
     });
 
-    document.getElementById("total-licit").textContent = lista.length;
-    document.getElementById("total-abertas").textContent = abertas;
-    document.getElementById("total-homolog").textContent = homolog;
-    document.getElementById("tabela").style.display = "table";
+    document.getElementById('card-total-atas').textContent = atas.length;
+    document.getElementById('card-vigentes').textContent = vigentes;
+    document.getElementById('card-encerradas').textContent = encerradas;
+    document.getElementById('tabela-atas').style.display = 'table';
   }
 
-  function renderTabelaLegado(lista, ano) {
-    const corpo = document.getElementById("corpo-tabela");
-    corpo.innerHTML = "";
-    document.getElementById("loading").style.display = "none";
+  async function verDetalheAta(seqCompra, ano, seqAta, objeto) {
+    document.getElementById('detalhe-ata').style.display = 'block';
+    document.getElementById('detalhe-ata-titulo').textContent = `Ata ${seqAta}/${ano} — Compra ${seqCompra}/${ano}`;
+    document.getElementById('detalhe-ata-info').innerHTML = `<div class="info-item"><div class="rotulo">Objeto</div><div class="valor">${objeto || '—'}</div></div>`;
+    document.getElementById('loading-itens').style.display = 'block';
+    document.getElementById('tabela-itens').style.display = 'none';
+    document.getElementById('info-saldo').style.display = 'none';
+    document.getElementById('detalhe-ata').scrollIntoView({behavior:'smooth'});
 
-    if (!lista.length) {
-      corpo.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">Nenhum resultado para ${ano}.</td></tr>`;
-      document.getElementById("tabela").style.display = "table";
+    try {
+      // Busca detalhes da ata
+      const urlAta = `${BASE}/orgaos/${CNPJ}/compras/${ano}/${seqCompra}/atas/${seqAta}`;
+      const rAta = await fetch(urlAta);
+      if (rAta.ok) {
+        const ata = await rAta.json();
+        document.getElementById('detalhe-ata-info').innerHTML = `
+          <div class="info-item"><div class="rotulo">Objeto</div><div class="valor">${ata.objetoCompra || objeto || '—'}</div></div>
+          <div class="info-item"><div class="rotulo">Nº da Ata</div><div class="valor">${ata.numeroAta || seqAta}</div></div>
+          <div class="info-item"><div class="rotulo">Vigência Início</div><div class="valor">${fmtData(ata.dataVigenciaInicio)}</div></div>
+          <div class="info-item"><div class="rotulo">Vigência Fim</div><div class="valor">${fmtData(ata.dataVigenciaFim)}</div></div>
+          <div class="info-item"><div class="rotulo">Fornecedor</div><div class="valor">${ata.nomeRazaoSocialFornecedor || '—'}</div></div>
+          <div class="info-item"><div class="rotulo">CNPJ Fornecedor</div><div class="valor">${ata.cnpjFornecedor || '—'}</div></div>
+        `;
+      }
+
+      // Busca itens da ata
+      const urlItens = `${BASE}/orgaos/${CNPJ}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`;
+      const rItens = await fetch(urlItens);
+      if (!rItens.ok) throw new Error('HTTP ' + rItens.status);
+      const jItens = await rItens.json();
+      const itens = Array.isArray(jItens) ? jItens : (jItens.data || []);
+
+      document.getElementById('loading-itens').style.display = 'none';
+      renderItens(itens);
+    } catch(e) {
+      document.getElementById('loading-itens').style.display = 'none';
+      document.getElementById('tabela-itens').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#c0392b">Erro ao carregar itens.</td></tr>';
+      document.getElementById('tabela-itens').style.display = 'table';
+      console.error(e);
+    }
+  }
+
+  function renderItens(itens) {
+    const corpo = document.getElementById('corpo-itens');
+    corpo.innerHTML = '';
+
+    if (!itens.length) {
+      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#888">Nenhum item encontrado.</td></tr>';
+      document.getElementById('tabela-itens').style.display = 'table';
       return;
     }
 
-    lista.forEach((item, i) => {
-      const num = item.numero_licitacao || "—";
-      const modal = item.modalidade_licitacao?.descricao || "—";
-      const obj = item.objeto?.substring(0,120) || "—";
-      const sit = item.situacao?.descricao || "—";
-      const data = item.data_abertura_proposta ? item.data_abertura_proposta.substring(0,10) : "—";
+    itens.forEach((item, i) => {
+      const qtdReg = item.quantidadeRegistrada || item.quantidade || 0;
+      const qtdSaldo = item.quantidadeSaldo != null ? item.quantidadeSaldo : (item.saldoQuantidade || qtdReg);
+      const pct = qtdReg > 0 ? Math.round((qtdSaldo / qtdReg) * 100) : 0;
+      const corBarra = pct > 50 ? '#1e8449' : pct > 20 ? '#b7950b' : '#c0392b';
+      const vUnit = item.valorUnitario || item.valorUnitarioEstimado || 0;
+      const vTotal = qtdReg * vUnit;
+
       corpo.innerHTML += `
         <tr>
           <td>${i+1}</td>
-          <td><strong>${num}/${ano}</strong></td>
-          <td>${modal}</td>
-          <td>${obj}</td>
-          <td><span class="badge badge-azul">${sit}</span></td>
-          <td>${data}</td>
-          <td><a class="btn-link" href="https://compras.gov.br" target="_blank">🔗 Ver</a></td>
+          <td>${item.descricao || item.materialServico?.descricao || '—'}</td>
+          <td>${item.unidadeMedida || '—'}</td>
+          <td style="text-align:right">${Number(qtdReg).toLocaleString('pt-BR')}</td>
+          <td style="text-align:right">R$ ${fmt(vUnit)}</td>
+          <td style="text-align:right">R$ ${fmt(vTotal)}</td>
+          <td style="text-align:right">${Number(qtdSaldo).toLocaleString('pt-BR')}</td>
+          <td style="min-width:100px">
+            <div style="font-size:.78rem;text-align:right;margin-bottom:3px">${pct}%</div>
+            <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%;background:${corBarra}"></div></div>
+          </td>
         </tr>`;
     });
 
-    document.getElementById("total-licit").textContent = lista.length;
-    document.getElementById("total-abertas").textContent = "—";
-    document.getElementById("total-homolog").textContent = "—";
-    document.getElementById("tabela").style.display = "table";
+    document.getElementById('tabela-itens').style.display = 'table';
+    document.getElementById('info-saldo').style.display = 'block';
   }
 
-  function limpar() {
-    document.getElementById("sel-ano").value = "2025";
-    document.getElementById("sel-modalidade").value = "";
-    document.getElementById("corpo-tabela").innerHTML = "";
-    document.getElementById("tabela").style.display = "none";
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("total-licit").textContent = "—";
-    document.getElementById("total-abertas").textContent = "—";
-    document.getElementById("total-homolog").textContent = "—";
-    document.getElementById("ano-filtro").textContent = "2025";
+  function fecharDetalhe() {
+    document.getElementById('detalhe-ata').style.display = 'none';
   }
 
-  // Carrega automaticamente ao abrir a página
-  window.onload = () => buscarDados();
+  function limparAtas() {
+    document.getElementById('ata-ano').value = '2025';
+    document.getElementById('ata-seq').value = '';
+    document.getElementById('loading-atas').style.display = 'none';
+    document.getElementById('erro-atas').style.display = 'none';
+    document.getElementById('tabela-atas').style.display = 'none';
+    document.getElementById('detalhe-ata').style.display = 'none';
+    ['card-total-atas','card-vigentes','card-encerradas'].forEach(id => document.getElementById(id).textContent = '—');
+    document.getElementById('card-ano-atas').textContent = '2025';
+  }
+
+  window.onload = () => {};
 </script>
-
 </body>
 </html>
