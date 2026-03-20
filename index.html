@@ -48,15 +48,32 @@
                 <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
                     <iconify-icon icon="lucide:search"></iconify-icon> Pesquisa e Saldo de Atas
                 </h1>
-                <div id="status-busca" class="text-xs text-blue-600 font-medium px-3 py-1 bg-blue-50 border border-blue-100 rounded-full hidden flex items-center gap-2">
-                    <iconify-icon icon="lucide:loader-2" class="animate-spin text-lg"></iconify-icon> <span id="status-texto">Pronto</span>
+                <div class="flex items-center gap-3">
+                    <button onclick="testarConexao()" class="text-xs text-slate-500 border border-slate-200 px-3 py-1.5 rounded-full hover:bg-slate-100 flex items-center gap-1">
+                        <iconify-icon icon="lucide:stethoscope"></iconify-icon> Diagnóstico
+                    </button>
+                    <div id="status-busca" class="text-xs text-blue-600 font-medium px-3 py-1 bg-blue-50 border border-blue-100 rounded-full hidden flex items-center gap-2">
+                        <iconify-icon icon="lucide:loader-2" class="animate-spin text-lg"></iconify-icon>
+                        <span id="status-texto">Pronto</span>
+                    </div>
                 </div>
             </header>
+
+            <!-- PAINEL DE DIAGNÓSTICO (oculto por padrão) -->
+            <div id="painel-diagnostico" class="hidden bg-slate-900 text-green-400 font-mono text-xs p-4 border-b border-slate-700 max-h-48 overflow-y-auto">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-slate-400 uppercase tracking-wider">Console de Diagnóstico</span>
+                    <button onclick="document.getElementById('painel-diagnostico').classList.add('hidden')" class="text-slate-500 hover:text-white">✕ fechar</button>
+                </div>
+                <div id="log-diagnostico"></div>
+            </div>
+
             <div class="p-6 overflow-y-auto flex-1">
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-end">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Ano da Compra</label>
                         <select id="filtro-ano" class="p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 w-32">
+                            <option value="2026">2026</option>
                             <option value="2025" selected>2025</option>
                             <option value="2024">2024</option>
                             <option value="2023">2023</option>
@@ -69,15 +86,30 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Vínculo</label>
                         <select id="filtro-tipo" class="p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="todas">Todas as Atas (UFR + Participantes)</option>
+                            <option value="todas">Todas as Atas</option>
                             <option value="gerenciadora">Apenas Gerenciadora (UFR)</option>
                             <option value="participante">Apenas Participante (Externas)</option>
                         </select>
+                    </div>
+                    <!-- NOVO: toggle de vencidas -->
+                    <div class="flex items-center gap-2 pb-1">
+                        <input type="checkbox" id="mostrar-vencidas" class="w-4 h-4 rounded accent-blue-600">
+                        <label for="mostrar-vencidas" class="text-xs font-semibold text-slate-600 cursor-pointer">Incluir vencidas</label>
                     </div>
                     <button onclick="carregarAtas()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow flex items-center gap-2">
                         <iconify-icon icon="lucide:download-cloud"></iconify-icon> Puxar Dados do PNCP
                     </button>
                 </div>
+
+                <!-- BARRA DE RESUMO (aparece após carga) -->
+                <div id="barra-resumo" class="hidden mb-4 px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 flex flex-wrap gap-4 shadow-sm">
+                    <span>📦 Compras encontradas: <strong id="resumo-compras">0</strong></span>
+                    <span>📋 Atas totais: <strong id="resumo-atas-total">0</strong></span>
+                    <span>✅ Atas vigentes: <strong id="resumo-atas-vigentes" class="text-emerald-600">0</strong></span>
+                    <span>⏰ Atas vencidas: <strong id="resumo-atas-vencidas" class="text-red-500">0</strong></span>
+                    <span class="text-slate-400">🔌 Via: <strong id="resumo-rota">—</strong></span>
+                </div>
+
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-slate-600">
@@ -108,7 +140,7 @@
         <div id="mod-config" class="modulo-conteudo hidden flex-1 flex flex-col h-full overflow-hidden">
             <header class="bg-white border-b border-slate-200 py-4 px-8 shadow-sm shrink-0">
                 <h1 class="text-xl font-bold text-slate-800">Gerenciar Atas Externas (UFR Participante)</h1>
-                <p class="text-xs text-slate-500 mt-1">Registre aqui as atas de outros órgãos que a UFR participa. Elas aparecerão junto com as atas da UFR no Módulo de Pesquisa.</p>
+                <p class="text-xs text-slate-500 mt-1">Registre aqui as atas de outros órgãos que a UFR participa.</p>
             </header>
             <div class="p-8 flex-1 overflow-y-auto">
                 <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl mb-6">
@@ -120,7 +152,7 @@
                         </div>
                         <div class="w-32">
                             <label class="block text-xs font-semibold text-blue-800 mb-1">Ano Compra</label>
-                            <input type="number" id="add-ano" value="2024" class="w-full p-2.5 border border-blue-200 rounded-lg text-sm outline-none">
+                            <input type="number" id="add-ano" value="2025" class="w-full p-2.5 border border-blue-200 rounded-lg text-sm outline-none">
                         </div>
                         <div class="w-32">
                             <label class="block text-xs font-semibold text-blue-800 mb-1">Nº Compra/Pregão</label>
@@ -141,6 +173,7 @@
         </div>
     </main>
 
+    <!-- MODAL SALDOS -->
     <div id="modal-itens" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
             <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
@@ -148,7 +181,10 @@
                 <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-700 p-2"><iconify-icon icon="lucide:x" class="text-2xl"></iconify-icon></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6">
-                <div id="loading-itens" class="hidden text-center py-10 text-slate-500"><iconify-icon icon="lucide:loader-2" class="text-4xl animate-spin mb-2"></iconify-icon><p>Buscando saldos...</p></div>
+                <div id="loading-itens" class="hidden text-center py-10 text-slate-500">
+                    <iconify-icon icon="lucide:loader-2" class="text-4xl animate-spin mb-2"></iconify-icon>
+                    <p>Buscando saldos...</p>
+                </div>
                 <table id="tabela-itens" class="w-full text-sm text-left border border-slate-200 rounded-lg overflow-hidden hidden">
                     <thead class="bg-slate-50 text-xs text-slate-500">
                         <tr><th class="p-3">Item</th><th class="p-3">Descrição</th><th class="p-3">UN</th><th class="p-3 text-right">R$ Unit.</th><th class="p-3 text-center text-blue-700 bg-blue-50 font-bold">Saldo Disponível</th></tr>
@@ -160,333 +196,428 @@
     </div>
 
     <script>
-        const CNPJ_UFR = "10673078000169";
+    // ================================================================
+    // CONFIGURAÇÃO
+    // ================================================================
+    const CNPJ_UFR = "10673078000169";
+    // Ambas as bases são testadas automaticamente
+    const API_BASES = [
+        "https://pncp.gov.br/api/pncp/v1",
+        "https://pncp.gov.br/pncp-api/v1"
+    ];
+    let API_BASE_ATIVA = API_BASES[0];
+    let ROTA_ATIVA = "direta";
+    let dadosCompletosAtas = [];
+    let totalComprasEncontradas = 0;
 
-        // ================================================================
-        // CORREÇÃO 1: URL BASE CORRETA DA API PÚBLICA DO PNCP
-        // A API de integração (api/pncp) requer autenticação Bearer Token.
-        // Para consultas públicas, o endpoint correto é /pncp-api/v1
-        // ================================================================
-        const API_BASE = "https://pncp.gov.br/pncp-api/v1";
+    // ================================================================
+    // LOG DE DIAGNÓSTICO VISUAL (aparece na UI)
+    // ================================================================
+    function log(msg, tipo = "info") {
+        const cores = { info: "text-green-400", warn: "text-yellow-400", error: "text-red-400", ok: "text-cyan-300" };
+        const prefixos = { info: "›", warn: "⚠", error: "✗", ok: "✓" };
+        const div = document.getElementById('log-diagnostico');
+        const hora = new Date().toLocaleTimeString('pt-BR');
+        div.innerHTML += `<div class="${cores[tipo] || 'text-green-400'}">[${hora}] ${prefixos[tipo] || '›'} ${msg}</div>`;
+        div.scrollTop = div.scrollHeight;
+        console.log(`[UFR-Painel] ${msg}`);
+    }
 
-        let dadosCompletosAtas = [];
+    // ================================================================
+    // FETCH COM MÚLTIPLOS PROXIES E TIMEOUT
+    // ================================================================
+    const PROXIES = [
+        { nome: "direta",       fn: url => url },
+        { nome: "corsproxy.io", fn: url => `https://corsproxy.io/?${encodeURIComponent(url)}` },
+        { nome: "allorigins",   fn: url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}` },
+        { nome: "codetabs",     fn: url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}` }
+    ];
 
-        // ================================================================
-        // CORREÇÃO 2: SISTEMA DE BYPASS CORS ROBUSTO COM MÚLTIPLOS PROXIES
-        // E TIMEOUT POR REQUISIÇÃO
-        // ================================================================
-        const ROTAS_PROXY = [
-            url => url,  // Rota 1: Acesso direto (funciona se a API permitir CORS)
-            url => `https://corsproxy.io/?${encodeURIComponent(url)}`,  // Rota 2: corsproxy.io (mais estável)
-            url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}` // Rota 3: allorigins (fallback)
-        ];
-
-        async function fetchSeguro(url, timeoutMs = 12000) {
-            for (let i = 0; i < ROTAS_PROXY.length; i++) {
-                const reqUrl = ROTAS_PROXY[i](url);
-                try {
-                    const controller = new AbortController();
-                    const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-                    const r = await fetch(reqUrl, {
-                        signal: controller.signal,
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    clearTimeout(timer);
-
-                    if (r.status === 404 || r.status === 204) return null;
-                    if (r.ok) return await r.json();
-
-                } catch (e) {
-                    // Timeout ou CORS: tenta próximo proxy silenciosamente
-                    if (i < ROTAS_PROXY.length - 1) {
-                        console.warn(`Rota ${i + 1} falhou para ${url.split('?')[0]}. Tentando próxima...`);
-                        continue;
-                    }
-                    console.error(`Todas as ${ROTAS_PROXY.length} rotas falharam:`, url);
-                }
+    async function tentarFetch(reqUrl, timeoutMs) {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), timeoutMs);
+        try {
+            const r = await fetch(reqUrl, {
+                signal: ctrl.signal,
+                headers: { Accept: "application/json" }
+            });
+            clearTimeout(t);
+            if (r.status === 404 || r.status === 204) return { status: r.status };
+            if (r.ok) {
+                const text = await r.text();
+                try { return { status: r.status, data: JSON.parse(text) }; }
+                catch { return { status: r.status }; } // resposta não é JSON
             }
-            return null;
+            return { status: r.status };
+        } catch (e) {
+            clearTimeout(t);
+            return { status: 0, err: e.message };
         }
+    }
 
-        // ================================================================
-        // CORREÇÃO 3: BUSCA COM PAGINAÇÃO COMPLETA
-        // Evita perder compras quando há mais de 50 no ano
-        // ================================================================
-        async function buscarTodasAsCompras(cnpj, ano) {
-            const TAMANHO_PAGINA = 50;
-            let pagina = 1;
-            let todasCompras = [];
+    async function fetchSeguro(url, silencioso = true) {
+        for (const proxy of PROXIES) {
+            const reqUrl = proxy.fn(url);
+            const r = await tentarFetch(reqUrl, proxy.nome === "direta" ? 8000 : 15000);
 
-            while (true) {
-                const url = `${API_BASE}/orgaos/${cnpj}/compras?anoCompra=${ano}&pagina=${pagina}&tamanhoPagina=${TAMANHO_PAGINA}`;
-                const json = await fetchSeguro(url);
+            if (r.status === 404 || r.status === 204) return null;
 
-                if (!json || !json.data || json.data.length === 0) break;
-
-                todasCompras = todasCompras.concat(json.data);
-
-                // Se retornou menos que o tamanho da página, já é a última
-                if (json.data.length < TAMANHO_PAGINA || json.paginasRestantes === 0) break;
-
-                pagina++;
+            if (r.data !== undefined) {
+                if (!silencioso) log(`Conectado via: ${proxy.nome}`, "ok");
+                ROTA_ATIVA = proxy.nome;
+                return r.data;
             }
-            return todasCompras;
-        }
 
-        window.onload = () => {
-            atualizarTabelaParticipantes();
-            document.getElementById('filtro-texto').addEventListener('keyup', renderizarTabela);
-            document.getElementById('filtro-tipo').addEventListener('change', renderizarTabela);
+            if (!silencioso) log(`${proxy.nome} → status ${r.status || r.err}`, "warn");
+        }
+        if (!silencioso) log(`Todas as rotas falharam para: ${url}`, "error");
+        return null;
+    }
+
+    // ================================================================
+    // BOTÃO "DIAGNÓSTICO" — testa a conexão e exibe resultado
+    // ================================================================
+    async function testarConexao() {
+        const painel = document.getElementById('painel-diagnostico');
+        document.getElementById('log-diagnostico').innerHTML = '';
+        painel.classList.remove('hidden');
+
+        log("Iniciando diagnóstico de conectividade com o PNCP...");
+
+        for (const base of API_BASES) {
+            log(`Testando base: ${base}`);
+            const url = `${base}/orgaos/${CNPJ_UFR}/compras?anoCompra=2025&pagina=1&tamanhoPagina=3`;
+            const data = await fetchSeguro(url, false);
+
+            if (data !== null) {
+                API_BASE_ATIVA = base;
+                const qtd = data?.data?.length ?? (Array.isArray(data) ? data.length : '?');
+                log(`✅ BASE FUNCIONANDO: ${base} | ${qtd} compras retornadas`, "ok");
+                log(`Estrutura da resposta: ${JSON.stringify(Object.keys(data)).substring(0, 120)}`, "info");
+                log(`Exemplo de compra[0]: ${JSON.stringify(data?.data?.[0] || data?.[0] || {}).substring(0, 200)}`, "info");
+                return;
+            } else {
+                log(`❌ ${base} não respondeu`, "error");
+            }
+        }
+        log("NENHUMA BASE RESPONDEU. Causa provável: CORS bloqueando todos os proxies. Tente abrir o arquivo via servidor local (Live Server no VS Code).", "error");
+    }
+
+    // ================================================================
+    // BUSCA PAGINADA
+    // ================================================================
+    async function buscarTodasAsCompras(cnpj, ano) {
+        const TAMANHO = 50;
+        let pagina = 1;
+        let todas = [];
+        while (true) {
+            const url = `${API_BASE_ATIVA}/orgaos/${cnpj}/compras?anoCompra=${ano}&pagina=${pagina}&tamanhoPagina=${TAMANHO}`;
+            const json = await fetchSeguro(url);
+            if (!json) break;
+
+            // A API pode retornar array direto OU { data: [...] }
+            const lista = Array.isArray(json) ? json : (json.data || []);
+            if (lista.length === 0) break;
+
+            todas = todas.concat(lista);
+            log(`Pág ${pagina}: ${lista.length} compras recebidas (total: ${todas.length})`);
+
+            // Critério de parada
+            const totalPaginas = json.totalPaginas || json.paginasTotais || null;
+            if (lista.length < TAMANHO || (totalPaginas && pagina >= totalPaginas)) break;
+            pagina++;
+        }
+        return todas;
+    }
+
+    // ================================================================
+    // MÓDULOS / UI
+    // ================================================================
+    window.onload = () => {
+        atualizarTabelaParticipantes();
+        document.getElementById('filtro-texto').addEventListener('keyup', renderizarTabela);
+        document.getElementById('filtro-tipo').addEventListener('change', renderizarTabela);
+        document.getElementById('mostrar-vencidas').addEventListener('change', renderizarTabela);
+    };
+
+    function abrirModulo(id) {
+        document.querySelectorAll('.modulo-conteudo').forEach(el => el.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        document.querySelectorAll('.menu-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-500/10', 'text-blue-400', 'border-blue-500/20');
+            btn.classList.add('text-slate-300', 'border-transparent');
+        });
+        const btn = document.getElementById('btn-' + id);
+        btn.classList.remove('text-slate-300', 'border-transparent');
+        btn.classList.add('bg-blue-500/10', 'text-blue-400', 'border-blue-500/20');
+    }
+
+    function setStatus(vis, txt = "") {
+        const el = document.getElementById('status-busca');
+        document.getElementById('status-texto').textContent = txt;
+        vis ? el.classList.remove('hidden') : el.classList.add('hidden');
+    }
+
+    // ================================================================
+    // CARREGAR ATAS
+    // ================================================================
+    async function carregarAtas() {
+        const ano = document.getElementById('filtro-ano').value;
+        dadosCompletosAtas = [];
+        totalComprasEncontradas = 0;
+
+        document.getElementById('tabela-corpo').innerHTML = `
+            <tr><td colspan="5" class="p-10 text-center text-slate-500">
+                <iconify-icon icon="lucide:loader-2" class="text-3xl animate-spin text-blue-500 mb-2 block mx-auto"></iconify-icon>
+                <span id="texto-progresso">Conectando ao PNCP...</span>
+            </td></tr>`;
+        setStatus(true, "Conectando...");
+
+        const atualizar = t => {
+            setStatus(true, t);
+            const el = document.getElementById('texto-progresso');
+            if (el) el.textContent = t;
         };
 
-        function abrirModulo(idModulo) {
-            document.querySelectorAll('.modulo-conteudo').forEach(el => el.classList.add('hidden'));
-            document.getElementById(idModulo).classList.remove('hidden');
-            document.querySelectorAll('.menu-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-500/10', 'text-blue-400', 'border-blue-500/20');
-                btn.classList.add('text-slate-300', 'border-transparent');
-            });
-            const btnAtivo = document.getElementById('btn-' + idModulo);
-            btnAtivo.classList.remove('text-slate-300', 'border-transparent');
-            btnAtivo.classList.add('bg-blue-500/10', 'text-blue-400', 'border-blue-500/20');
+        // --- Descobre qual base URL está respondendo ---
+        let baseOk = false;
+        for (const base of API_BASES) {
+            const url = `${base}/orgaos/${CNPJ_UFR}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=3`;
+            const teste = await fetchSeguro(url);
+            if (teste !== null) { API_BASE_ATIVA = base; baseOk = true; break; }
         }
 
-        function setStatus(visivel, texto = "") {
-            const el = document.getElementById('status-busca');
-            document.getElementById('status-texto').textContent = texto;
-            if (visivel) el.classList.remove('hidden');
-            else el.classList.add('hidden');
-        }
-
-        function setProgresso(texto) {
-            const el = document.getElementById('texto-progresso');
-            if (el) el.textContent = texto;
-            setStatus(true, texto);
-        }
-
-        async function carregarAtas() {
-            const ano = document.getElementById('filtro-ano').value;
-            dadosCompletosAtas = [];
-
+        if (!baseOk) {
             document.getElementById('tabela-corpo').innerHTML = `
-                <tr><td colspan="5" class="p-10 text-center text-slate-500">
-                    <iconify-icon icon="lucide:loader-2" class="text-3xl animate-spin text-blue-500 mb-2 block mx-auto"></iconify-icon>
-                    <span id="texto-progresso">Conectando ao PNCP...</span>
+                <tr><td colspan="5" class="p-8 text-center">
+                    <div class="text-red-500 font-bold text-base mb-2">❌ Não foi possível conectar ao PNCP</div>
+                    <div class="text-slate-500 text-sm max-w-md mx-auto">Todos os proxies falharam. Clique em <strong>Diagnóstico</strong> para mais detalhes.<br><br>
+                    💡 <strong>Dica:</strong> Abra o arquivo via <code class="bg-slate-100 px-1 rounded">Live Server</code> no VS Code, ou hospede em qualquer servidor HTTP.</div>
                 </td></tr>`;
-            setStatus(true, "Conectando...");
-
-            // --- BUSCAR COMPRAS UFR (com paginação completa) ---
-            setProgresso(`Buscando compras da UFR em ${ano}...`);
-            const comprasUFR = await buscarTodasAsCompras(CNPJ_UFR, ano);
-
-            let contador = 1;
-            for (let c of comprasUFR) {
-                setProgresso(`Lendo atas da compra ${contador}/${comprasUFR.length} (UFR)...`);
-
-                const atas = await fetchSeguro(`${API_BASE}/orgaos/${CNPJ_UFR}/compras/${ano}/${c.sequencialCompra}/atas`);
-                if (atas) {
-                    let lista = Array.isArray(atas) ? atas : (atas.data || []);
-                    lista.forEach(a => {
-                        dadosCompletosAtas.push({
-                            ...a,
-                            _tipo: 'GERENCIADORA',
-                            _seqCompra: c.sequencialCompra,
-                            _anoCompra: ano,
-                            _cnpjOrigem: CNPJ_UFR,
-                            _objeto: c.objetoCompra
-                        });
-                    });
-                }
-                contador++;
-            }
-
-            // --- BUSCAR ATAS EXTERNAS (PARTICIPANTE) ---
-            const externas = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
-            for (let ext of externas) {
-                if (String(ext.ano) === String(ano)) {
-                    setProgresso(`Lendo Ata Externa (CNPJ: ${ext.cnpj})...`);
-
-                    let objetoExt = "Objeto não detalhado";
-                    const cData = await fetchSeguro(`${API_BASE}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}`);
-                    if (cData) objetoExt = cData.objetoCompra || objetoExt;
-
-                    const atasE = await fetchSeguro(`${API_BASE}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}/atas`);
-                    if (atasE) {
-                        let lista = Array.isArray(atasE) ? atasE : (atasE.data || []);
-                        lista.forEach(a => {
-                            dadosCompletosAtas.push({
-                                ...a,
-                                _tipo: 'PARTICIPANTE',
-                                _seqCompra: ext.seq,
-                                _anoCompra: ext.ano,
-                                _cnpjOrigem: ext.cnpj,
-                                _objeto: objetoExt
-                            });
-                        });
-                    }
-                }
-            }
-
-            // Calcula prazos de vigência
-            const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-            dadosCompletosAtas.forEach(a => {
-                const fim = a.dataVigenciaFim ? new Date(a.dataVigenciaFim + 'T00:00:00') : null;
-                if (fim) {
-                    a._dias = Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
-                    a._vigente = a._dias >= 0;
-                } else {
-                    a._vigente = false;
-                    a._dias = -999;
-                }
-            });
-
             setStatus(false);
-            renderizarTabela();
+            return;
         }
 
-        function renderizarTabela() {
-            const corpo = document.getElementById('tabela-corpo');
-            const termo = document.getElementById('filtro-texto').value.toLowerCase();
-            const tipoFiltro = document.getElementById('filtro-tipo').value;
+        // --- UFR Gerenciadora ---
+        atualizar(`Buscando compras da UFR em ${ano}...`);
+        const comprasUFR = await buscarTodasAsCompras(CNPJ_UFR, ano);
+        totalComprasEncontradas = comprasUFR.length;
 
-            corpo.innerHTML = '';
-
-            let filtradas = dadosCompletosAtas.filter(a => {
-                if (!a._vigente) return false;
-                if (tipoFiltro === 'gerenciadora' && a._tipo !== 'GERENCIADORA') return false;
-                if (tipoFiltro === 'participante' && a._tipo !== 'PARTICIPANTE') return false;
-                const buscaConteudo = `${a.numeroAta || ''} ${a._objeto || ''} ${a.nomeRazaoSocialFornecedor || ''}`.toLowerCase();
-                return buscaConteudo.includes(termo);
-            });
-
-            filtradas.sort((a, b) => a._dias - b._dias);
-
-            if (filtradas.length === 0) {
-                corpo.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nenhuma ata vigente encontrada para os filtros selecionados.</td></tr>`;
-                return;
+        for (let i = 0; i < comprasUFR.length; i++) {
+            const c = comprasUFR[i];
+            atualizar(`Lendo atas ${i + 1}/${comprasUFR.length} (UFR)...`);
+            const atas = await fetchSeguro(`${API_BASE_ATIVA}/orgaos/${CNPJ_UFR}/compras/${ano}/${c.sequencialCompra}/atas`);
+            if (atas) {
+                const lista = Array.isArray(atas) ? atas : (atas.data || []);
+                lista.forEach(a => dadosCompletosAtas.push({
+                    ...a, _tipo: 'GERENCIADORA',
+                    _seqCompra: c.sequencialCompra, _anoCompra: ano,
+                    _cnpjOrigem: CNPJ_UFR, _objeto: c.objetoCompra || ''
+                }));
             }
-
-            filtradas.forEach(a => {
-                const badgeTipo = a._tipo === 'GERENCIADORA'
-                    ? `<span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold">UFR GERENCIA</span>`
-                    : `<span class="bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded font-bold">UFR PARTICIPA</span>`;
-
-                let corPrazo = a._dias <= 60 ? 'text-red-600 font-bold' : (a._dias <= 120 ? 'text-amber-600' : 'text-emerald-600');
-                const dataFim = a.dataVigenciaFim ? new Date(a.dataVigenciaFim + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/D';
-
-                corpo.innerHTML += `
-                    <tr class="hover:bg-slate-50 border-b border-slate-100">
-                        <td class="p-4 align-top">
-                            <div class="font-bold text-slate-800 mb-1">Ata ${a.numeroAta || a.sequencialAta}/${a._anoCompra}</div>
-                            ${badgeTipo}
-                        </td>
-                        <td class="p-4 align-top text-xs" title="${a._objeto}">${(a._objeto || '').substring(0, 80)}...</td>
-                        <td class="p-4 align-top text-center text-xs">
-                            <span class="${corPrazo}">Vence em ${a._dias} dias</span><br>
-                            <span class="text-[10px] text-slate-400">Até ${dataFim}</span>
-                        </td>
-                        <td class="p-4 align-top text-xs">${a.nomeRazaoSocialFornecedor || '-'}</td>
-                        <td class="p-4 align-top text-center">
-                            <button onclick="verSaldos('${a._cnpjOrigem}', '${a._anoCompra}', '${a._seqCompra}', '${a.sequencialAta}', '${a.numeroAta || a.sequencialAta}')"
-                                class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded text-xs font-bold hover:bg-slate-200 transition">Ver Saldos</button>
-                        </td>
-                    </tr>
-                `;
-            });
         }
 
-        async function verSaldos(cnpj, ano, seqCompra, seqAta, numAta) {
-            document.getElementById('modal-itens').classList.remove('opacity-0', 'pointer-events-none');
-            document.getElementById('modal-titulo').textContent = `Saldos para Empenho - Ata ${numAta}/${ano}`;
-            document.getElementById('loading-itens').classList.remove('hidden');
-            document.getElementById('tabela-itens').classList.add('hidden');
-            const tbody = document.getElementById('corpo-itens');
-            tbody.innerHTML = '';
+        // --- Atas Externas (Participante) ---
+        const externas = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
+        for (const ext of externas) {
+            if (String(ext.ano) !== String(ano)) continue;
+            atualizar(`Lendo Ata Externa (CNPJ: ${ext.cnpj})...`);
+            let objeto = "Objeto não detalhado";
+            const cData = await fetchSeguro(`${API_BASE_ATIVA}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}`);
+            if (cData) objeto = cData.objetoCompra || objeto;
 
-            const itens = await fetchSeguro(`${API_BASE}/orgaos/${cnpj}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`);
-
-            if (itens) {
-                const lista = Array.isArray(itens) ? itens : (itens.data || []);
-                if (lista.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Nenhum item encontrado para esta ata.</td></tr>`;
-                } else {
-                    lista.forEach(i => {
-                        const qtdTotal = i.quantidadeRegistrada || i.quantidade || 0;
-                        const saldo = i.quantidadeSaldo != null ? i.quantidadeSaldo : (i.saldoQuantidade != null ? i.saldoQuantidade : qtdTotal);
-                        const vUnit = i.valorUnitario || 0;
-                        const descricao = i.descricao || i.materialServico?.descricao || '-';
-
-                        tbody.innerHTML += `
-                            <tr class="border-b border-slate-100 hover:bg-slate-50">
-                                <td class="p-3 text-center text-xs text-slate-500">${i.numeroItem}</td>
-                                <td class="p-3 text-xs font-medium">${descricao}</td>
-                                <td class="p-3 text-xs">${i.unidadeMedida || 'UN'}</td>
-                                <td class="p-3 text-right text-xs">R$ ${vUnit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                                <td class="p-3 text-center font-bold text-sm bg-blue-50/50 text-blue-700">${saldo}</td>
-                            </tr>
-                        `;
-                    });
-                }
-            } else {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-red-500">Erro ao buscar saldos. Verifique a conexão e tente novamente.</td></tr>`;
+            const atasE = await fetchSeguro(`${API_BASE_ATIVA}/orgaos/${ext.cnpj}/compras/${ext.ano}/${ext.seq}/atas`);
+            if (atasE) {
+                const lista = Array.isArray(atasE) ? atasE : (atasE.data || []);
+                lista.forEach(a => dadosCompletosAtas.push({
+                    ...a, _tipo: 'PARTICIPANTE',
+                    _seqCompra: ext.seq, _anoCompra: ext.ano,
+                    _cnpjOrigem: ext.cnpj, _objeto: objeto
+                }));
             }
-
-            document.getElementById('loading-itens').classList.add('hidden');
-            document.getElementById('tabela-itens').classList.remove('hidden');
         }
 
-        function fecharModal() {
-            document.getElementById('modal-itens').classList.add('opacity-0', 'pointer-events-none');
+        // --- Calcula vigência ---
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        dadosCompletosAtas.forEach(a => {
+            const fim = a.dataVigenciaFim ? new Date(a.dataVigenciaFim + 'T00:00:00') : null;
+            if (fim) {
+                a._dias = Math.ceil((fim - hoje) / 86400000);
+                a._vigente = a._dias >= 0;
+            } else { a._vigente = false; a._dias = -999; }
+        });
+
+        // --- Atualiza barra de resumo ---
+        const vigentes = dadosCompletosAtas.filter(a => a._vigente).length;
+        const vencidas = dadosCompletosAtas.length - vigentes;
+        document.getElementById('resumo-compras').textContent = totalComprasEncontradas;
+        document.getElementById('resumo-atas-total').textContent = dadosCompletosAtas.length;
+        document.getElementById('resumo-atas-vigentes').textContent = vigentes;
+        document.getElementById('resumo-atas-vencidas').textContent = vencidas;
+        document.getElementById('resumo-rota').textContent = ROTA_ATIVA;
+        document.getElementById('barra-resumo').classList.remove('hidden');
+
+        // Se só tiver vencidas, ativa o toggle automaticamente
+        if (vigentes === 0 && vencidas > 0) {
+            document.getElementById('mostrar-vencidas').checked = true;
         }
 
-        // --- GESTÃO DE ATAS EXTERNAS ---
-        function adicionarParticipante() {
-            const cnpj = document.getElementById('add-cnpj').value.replace(/\D/g, '');
-            const ano = document.getElementById('add-ano').value;
-            const seq = document.getElementById('add-seq').value;
+        setStatus(false);
+        renderizarTabela();
+    }
 
-            if (!cnpj || !ano || !seq) return alert("Preencha todos os campos.");
+    // ================================================================
+    // RENDERIZAR TABELA
+    // ================================================================
+    function renderizarTabela() {
+        const corpo = document.getElementById('tabela-corpo');
+        const termo = document.getElementById('filtro-texto').value.toLowerCase();
+        const tipoFiltro = document.getElementById('filtro-tipo').value;
+        const mostrarVencidas = document.getElementById('mostrar-vencidas').checked;
 
-            const externas = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
-            const jaExiste = externas.some(e => e.cnpj === cnpj && e.ano === ano && e.seq === seq);
-            if (jaExiste) return alert("Esta ata já está registrada.");
+        corpo.innerHTML = '';
 
-            externas.push({ cnpj, ano, seq });
-            localStorage.setItem('ufr_atas_participantes', JSON.stringify(externas));
+        let filtradas = dadosCompletosAtas.filter(a => {
+            if (!mostrarVencidas && !a._vigente) return false;
+            if (tipoFiltro === 'gerenciadora' && a._tipo !== 'GERENCIADORA') return false;
+            if (tipoFiltro === 'participante' && a._tipo !== 'PARTICIPANTE') return false;
+            const txt = `${a.numeroAta || ''} ${a._objeto || ''} ${a.nomeRazaoSocialFornecedor || ''}`.toLowerCase();
+            return txt.includes(termo);
+        });
 
-            document.getElementById('add-cnpj').value = '';
-            document.getElementById('add-seq').value = '';
-            atualizarTabelaParticipantes();
-            alert("Ata registrada! Volte ao módulo de Pesquisa e clique em 'Puxar Dados' para visualizá-la.");
+        filtradas.sort((a, b) => b._vigente - a._vigente || a._dias - b._dias);
+
+        if (filtradas.length === 0) {
+            const total = dadosCompletosAtas.length;
+            corpo.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">
+                ${total > 0
+                    ? `Dados carregados (${total} ata${total > 1 ? 's' : ''} no total) mas nenhuma passa pelo filtro atual.<br>
+                       <button onclick="document.getElementById('mostrar-vencidas').checked=true;renderizarTabela()" class="mt-2 text-blue-600 underline text-sm">Ativar &quot;incluir vencidas&quot;</button>`
+                    : 'Nenhuma ata encontrada para o filtro selecionado.'}
+            </td></tr>`;
+            return;
         }
 
-        function atualizarTabelaParticipantes() {
-            const externas = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
-            const tbody = document.getElementById('lista-participantes');
-            tbody.innerHTML = '';
-            if (externas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 text-xs">Nenhuma ata externa configurada.</td></tr>`;
-                return;
-            }
-            externas.forEach((ext, index) => {
+        filtradas.forEach(a => {
+            const badgeTipo = a._tipo === 'GERENCIADORA'
+                ? `<span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold">UFR GERENCIA</span>`
+                : `<span class="bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded font-bold">UFR PARTICIPA</span>`;
+
+            const badgeVigencia = a._vigente
+                ? `<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 rounded">Vigente</span>`
+                : `<span class="text-[10px] bg-red-100 text-red-600 px-1.5 rounded">Vencida</span>`;
+
+            const corPrazo = a._vigente
+                ? (a._dias <= 60 ? 'text-red-600 font-bold' : a._dias <= 120 ? 'text-amber-600' : 'text-emerald-600')
+                : 'text-slate-400 line-through';
+
+            const diasTexto = a._vigente ? `Vence em ${a._dias} dias` : `Venceu há ${Math.abs(a._dias)} dias`;
+            const dataFim = a.dataVigenciaFim ? new Date(a.dataVigenciaFim + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/D';
+
+            corpo.innerHTML += `
+                <tr class="hover:bg-slate-50 border-b border-slate-100 ${!a._vigente ? 'opacity-60' : ''}">
+                    <td class="p-4 align-top">
+                        <div class="font-bold text-slate-800 mb-1">Ata ${a.numeroAta || a.sequencialAta}/${a._anoCompra}</div>
+                        <div class="flex gap-1 flex-wrap">${badgeTipo} ${badgeVigencia}</div>
+                    </td>
+                    <td class="p-4 align-top text-xs" title="${a._objeto}">${(a._objeto || '').substring(0, 80)}${a._objeto?.length > 80 ? '...' : ''}</td>
+                    <td class="p-4 align-top text-center text-xs">
+                        <span class="${corPrazo}">${diasTexto}</span><br>
+                        <span class="text-[10px] text-slate-400">Até ${dataFim}</span>
+                    </td>
+                    <td class="p-4 align-top text-xs">${a.nomeRazaoSocialFornecedor || '-'}</td>
+                    <td class="p-4 align-top text-center">
+                        <button onclick="verSaldos('${a._cnpjOrigem}','${a._anoCompra}','${a._seqCompra}','${a.sequencialAta}','${a.numeroAta || a.sequencialAta}')"
+                            class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded text-xs font-bold hover:bg-slate-200 transition">
+                            Ver Saldos
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    // ================================================================
+    // MODAL SALDOS
+    // ================================================================
+    async function verSaldos(cnpj, ano, seqCompra, seqAta, numAta) {
+        document.getElementById('modal-itens').classList.remove('opacity-0', 'pointer-events-none');
+        document.getElementById('modal-titulo').textContent = `Saldos para Empenho — Ata ${numAta}/${ano}`;
+        document.getElementById('loading-itens').classList.remove('hidden');
+        document.getElementById('tabela-itens').classList.add('hidden');
+        const tbody = document.getElementById('corpo-itens');
+        tbody.innerHTML = '';
+
+        const itens = await fetchSeguro(`${API_BASE_ATIVA}/orgaos/${cnpj}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`);
+        const lista = itens ? (Array.isArray(itens) ? itens : (itens.data || [])) : [];
+
+        if (lista.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-${itens === null ? 'red' : 'slate'}-500">
+                ${itens === null ? 'Erro ao buscar saldos. Tente novamente.' : 'Nenhum item encontrado para esta ata.'}
+            </td></tr>`;
+        } else {
+            lista.forEach(i => {
+                const qtd = i.quantidadeRegistrada || i.quantidade || 0;
+                const saldo = i.quantidadeSaldo ?? i.saldoQuantidade ?? qtd;
+                const vUnit = (i.valorUnitario || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                const desc = i.descricao || i.materialServico?.descricao || '-';
                 tbody.innerHTML += `
-                    <tr>
-                        <td class="p-3 font-mono text-xs">${ext.cnpj}</td>
-                        <td class="p-3 text-xs">${ext.ano}</td>
-                        <td class="p-3 text-xs">Compra Nº ${ext.seq}</td>
-                        <td class="p-3 text-center"><button onclick="removerParticipante(${index})" class="text-red-500 text-xs font-bold hover:underline">Remover</button></td>
-                    </tr>
-                `;
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="p-3 text-center text-xs text-slate-500">${i.numeroItem}</td>
+                        <td class="p-3 text-xs font-medium">${desc}</td>
+                        <td class="p-3 text-xs">${i.unidadeMedida || 'UN'}</td>
+                        <td class="p-3 text-right text-xs">R$ ${vUnit}</td>
+                        <td class="p-3 text-center font-bold text-sm bg-blue-50/50 text-blue-700">${saldo}</td>
+                    </tr>`;
             });
         }
+        document.getElementById('loading-itens').classList.add('hidden');
+        document.getElementById('tabela-itens').classList.remove('hidden');
+    }
 
-        function removerParticipante(index) {
-            const externas = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
-            externas.splice(index, 1);
-            localStorage.setItem('ufr_atas_participantes', JSON.stringify(externas));
-            atualizarTabelaParticipantes();
-        }
+    function fecharModal() {
+        document.getElementById('modal-itens').classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    // ================================================================
+    // GESTÃO DE PARTICIPANTES
+    // ================================================================
+    function adicionarParticipante() {
+        const cnpj = document.getElementById('add-cnpj').value.replace(/\D/g, '');
+        const ano = document.getElementById('add-ano').value;
+        const seq = document.getElementById('add-seq').value;
+        if (!cnpj || !ano || !seq) return alert("Preencha todos os campos.");
+        const lista = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
+        if (lista.some(e => e.cnpj === cnpj && e.ano === ano && e.seq === seq)) return alert("Já registrada.");
+        lista.push({ cnpj, ano, seq });
+        localStorage.setItem('ufr_atas_participantes', JSON.stringify(lista));
+        document.getElementById('add-cnpj').value = '';
+        document.getElementById('add-seq').value = '';
+        atualizarTabelaParticipantes();
+        alert("Ata registrada! Clique em 'Puxar Dados' para visualizá-la.");
+    }
+
+    function atualizarTabelaParticipantes() {
+        const lista = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
+        const tbody = document.getElementById('lista-participantes');
+        tbody.innerHTML = lista.length === 0
+            ? `<tr><td colspan="4" class="p-4 text-center text-slate-400 text-xs">Nenhuma ata externa configurada.</td></tr>`
+            : lista.map((e, i) => `
+                <tr>
+                    <td class="p-3 font-mono text-xs">${e.cnpj}</td>
+                    <td class="p-3 text-xs">${e.ano}</td>
+                    <td class="p-3 text-xs">Compra Nº ${e.seq}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="removerParticipante(${i})" class="text-red-500 text-xs font-bold hover:underline">Remover</button>
+                    </td>
+                </tr>`).join('');
+    }
+
+    function removerParticipante(i) {
+        const lista = JSON.parse(localStorage.getItem('ufr_atas_participantes') || '[]');
+        lista.splice(i, 1);
+        localStorage.setItem('ufr_atas_participantes', JSON.stringify(lista));
+        atualizarTabelaParticipantes();
+    }
     </script>
 </body>
 </html>
