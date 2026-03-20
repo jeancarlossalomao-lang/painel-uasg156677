@@ -11,7 +11,7 @@
       background: #1a5276;
       color: white;
       padding: 24px 32px;
-      display: flex;
+      display: flex
       align-items: center;
       gap: 16px;
     }
@@ -215,7 +215,7 @@
 
     try {
       // API pública do PNCP por CNPJ do órgão
-      let url = `https://pncp.gov.br/api/pncp/v1/orgaos/${CNPJ_UFR}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=50`;
+      let url = `https://pncp.gov.br/api/consulta/v1/contratacoes/publicacao?dataInicial=${ano}0101&dataFinal=${ano}1231&cnpjOrgao=${CNPJ_UFR}&pagina=1&tamanhoPagina=50`;
       if (modalidade) url += `&codigoModalidadeContratacao=${modalidade}`;
 
       const resp = await fetch(url, {
