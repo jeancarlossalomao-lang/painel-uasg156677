@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel de Contratações — UASG 156677 (UFR)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; }
+    header {
+      background: #1a5276;
+      color: white;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header img { height: 52px; }
+    header div h1 { font-size: 1.4rem; }
+    header div p { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
+    .container { max-width: 1100px; margin: 32px auto; padding: 0 16px; }
+    .cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px 24px;
+      flex: 1;
+      min-width: 180px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      text-align: center;
+    }
+    .card .num { font-size: 2rem; font-weight: bold; color: #1a5276; }
+    .card .label { font-size: 0.85rem; color: #777; margin-top: 4px; }
+    .filters {
+      background: white;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .filters select, .filters input {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .filters button {
+      padding: 8px 20px;
+      background: #1a5276;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .filters button:hover { background: #154360; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    thead { background: #1a5276; color: white; }
+    th, td { padding: 12px 14px; text-align: left; font-size: 0.88rem; }
+    tr:nth-child(even) { background: #f8f9fa; }
+    tr:hover { background: #eaf2ff; }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: bold;
+    }
+    .badge-verde { background: #d4efdf; color: #1e8449; }
+    .badge-azul  { background: #d6eaf8; color: #1a5276; }
+    .badge-cinza { background: #eaecee; color: #555; }
+    .badge-amarelo { background: #fef9e7; color: #b7950b; }
+    a.btn-link {
+      color: #1a5276;
+      font-weight: bold;
+      text-decoration: none;
+      font-size: 0.82rem;
+    }
+    a.btn-link:hover { text-decoration: underline; }
+    #loading { text-align: center; padding: 40px; color: #888; font-size: 1rem; }
+    #erro { text-align: center; padding: 20px; color: #c0392b; display: none; }
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #aaa;
+      font-size: 0.8rem;
+      margin-top: 32px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://www.gov.br/++theme++padrao_govbr/img/govbr-logo-large.png" alt="Gov.br" onerror="this.style.display='none'"/>
+  <div>
+    <h1>🏛️ Painel de Contratações Públicas</h1>
+    <p>UASG 156677 — Universidade Federal de Rondonópolis (UFR) | Dados: PNCP / Compras.gov.br</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="cards">
+    <div class="card">
+      <div class="num" id="total-licit">—</div>
+      <div class="label">Licitações encontradas</div>
+    </div>
+    <div class="card">
+      <div class="num" id="total-abertas">—</div>
+      <div class="label">Em andamento</div>
+    </div>
+    <div class="card">
+      <div class="num" id="total-homolog">—</div>
+      <div class="label">Homologadas / Encerradas</div>
+    </div>
+    <div class="card">
+      <div class="num" id="ano-filtro">2025</div>
+      <div class="label">Ano selecionado</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <label><strong>Ano:</strong></label>
+    <select id="sel-ano">
+      <option value="2026">2026</option>
+      <option value="2025" selected>2025</option>
+      <option value="2024">2024</option>
+      <option value="2023">2023</option>
+    </select>
+    <label><strong>Modalidade:</strong></label>
+    <select id="sel-modalidade">
+      <option value="">Todas</option>
+      <option value="6">Pregão Eletrônico</option>
+      <option value="8">Dispensa Eletrônica</option>
+      <option value="4">Concorrência Eletrônica</option>
+    </select>
+    <button onclick="buscarDados()">🔍 Buscar</button>
+    <button onclick="limpar()" style="background:#7f8c8d;">✕ Limpar</button>
+  </div>
+
+  <div id="loading">⏳ Carregando dados do PNCP...</div>
+  <div id="erro">❌ Não foi possível carregar os dados. Verifique sua conexão ou tente novamente.</div>
+
+  <table id="tabela" style="display:none;">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Nº / Ano</th>
+        <th>Modalidade</th>
+        <th>Objeto</th>
+        <th>Situação</th>
+        <th>Data Publicação</th>
+        <th>Links</th>
+      </tr>
+    </thead>
+    <tbody id="corpo-tabela"></tbody>
+  </table>
+
+</div>
+
+<footer>
+  Dados públicos obtidos via API do <a href="https://pncp.gov.br" target="_blank">Portal Nacional de Contratações Públicas (PNCP)</a> e <a href="https://compras.gov.br" target="_blank">Compras.gov.br</a>.<br/>
+  UASG 156677 — Universidade Federal de Rondonópolis (UFR). Atualização automática a cada busca.
+</footer>
+
+<script>
+  const UASG = "156677";
+  const CNPJ_UFR = "10673078000169"; // CNPJ da UFR para PNCP
+
+  const modalidades = {
+    1: "Leilão Eletrônico",
+    2: "Diálogo Competitivo",
+    3: "Concurso",
+    4: "Concorrência Eletrônica",
+    5: "Concorrência Presencial",
+    6: "Pregão Eletrônico",
+    7: "Pregão Presencial",
+    8: "Dispensa Eletrônica",
+    9: "Inexigibilidade",
+    10: "Manifestação de Interesse",
+    11: "Pré-qualificação",
+    12: "Credenciamento",
+    13: "Leilão Presencial"
+  };
+
+  const situacoes = {
+    1: { label: "Divulgada no PNCP", cor: "badge-azul" },
+    2: { label: "Em andamento", cor: "badge-amarelo" },
+    3: { label: "Encerrada", cor: "badge-cinza" },
+    4: { label: "Suspensa", cor: "badge-cinza" },
+    5: { label: "Cancelada", cor: "badge-cinza" },
+    6: { label: "Homologada", cor: "badge-verde" },
+    7: { label: "Deserta/Fracassada", cor: "badge-cinza" },
+    8: { label: "Anulada", cor: "badge-cinza" }
+  };
+
+  async function buscarDados() {
+    const ano = document.getElementById("sel-ano").value;
+    const modalidade = document.getElementById("sel-modalidade").value;
+    document.getElementById("ano-filtro").textContent = ano;
+    document.getElementById("loading").style.display = "block";
+    document.getElementById("tabela").style.display = "none";
+    document.getElementById("erro").style.display = "none";
+
+    try {
+      // API pública do PNCP por CNPJ do órgão
+      let url = `https://pncp.gov.br/api/pncp/v1/orgaos/${CNPJ_UFR}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=50`;
+      if (modalidade) url += `&codigoModalidadeContratacao=${modalidade}`;
+
+      const resp = await fetch(url, {
+        headers: { "Accept": "application/json" }
+      });
+
+      if (!resp.ok) throw new Error("Erro na API");
+
+      const dados = await resp.json();
+      const lista = dados.data || dados || [];
+
+      renderTabela(lista, ano);
+    } catch (e) {
+      // fallback: tenta API alternativa do compras.gov
+      try {
+        const url2 = `https://compras.dados.gov.br/licitacoes/v1/licitacoes.json?coduasg=${UASG}&ano=${ano}&_limit=50`;
+        const resp2 = await fetch(url2);
+        const dados2 = await resp2.json();
+        const lista2 = dados2._embedded?.licitacoes || [];
+        renderTabelaLegado(lista2, ano);
+      } catch(e2) {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("erro").style.display = "block";
+      }
+    }
+  }
+
+  function renderTabela(lista, ano) {
+    const corpo = document.getElementById("corpo-tabela");
+    corpo.innerHTML = "";
+    document.getElementById("loading").style.display = "none";
+
+    if (!lista.length) {
+      corpo.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">Nenhum resultado encontrado para ${ano}.</td></tr>`;
+      document.getElementById("tabela").style.display = "table";
+      document.getElementById("total-licit").textContent = "0";
+      document.getElementById("total-abertas").textContent = "0";
+      document.getElementById("total-homolog").textContent = "0";
+      return;
+    }
+
+    let abertas = 0, homolog = 0;
+    lista.forEach((item, i) => {
+      const sit = situacoes[item.situacaoCompraId] || { label: "—", cor: "badge-cinza" };
+      if ([1,2].includes(item.situacaoCompraId)) abertas++;
+      if ([6].includes(item.situacaoCompraId)) homolog++;
+
+      const modal = modalidades[item.modalidadeId] || "—";
+      const data = item.dataPublicacaoPncp ? item.dataPublicacaoPncp.substring(0,10) : "—";
+      const objeto = item.objetoCompra ? item.objetoCompra.substring(0,120) + (item.objetoCompra.length > 120 ? "..." : "") : "—";
+      const numSeq = item.sequencialCompra || "—";
+      const linkPNCP = item.linkSistemaOrigem || `https://pncp.gov.br/app/editais/${CNPJ_UFR}/${ano}/${numSeq}`;
+
+      corpo.innerHTML += `
+        <tr>
+          <td>${i+1}</td>
+          <td><strong>${numSeq}/${ano}</strong></td>
+          <td>${modal}</td>
+          <td title="${item.objetoCompra || ''}">${objeto}</td>
+          <td><span class="badge ${sit.cor}">${sit.label}</span></td>
+          <td>${data}</td>
+          <td>
+            <a class="btn-link" href="${linkPNCP}" target="_blank">🔗 PNCP</a><br/>
+            <a class="btn-link" href="https://www.gov.br/compras/edital/${UASG}-6-${String(numSeq).padStart(5,'0')}-${ano}" target="_blank">📄 Compras</a>
+          </td>
+        </tr>`;
+    });
+
+    document.getElementById("total-licit").textContent = lista.length;
+    document.getElementById("total-abertas").textContent = abertas;
+    document.getElementById("total-homolog").textContent = homolog;
+    document.getElementById("tabela").style.display = "table";
+  }
+
+  function renderTabelaLegado(lista, ano) {
+    const corpo = document.getElementById("corpo-tabela");
+    corpo.innerHTML = "";
+    document.getElementById("loading").style.display = "none";
+
+    if (!lista.length) {
+      corpo.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">Nenhum resultado para ${ano}.</td></tr>`;
+      document.getElementById("tabela").style.display = "table";
+      return;
+    }
+
+    lista.forEach((item, i) => {
+      const num = item.numero_licitacao || "—";
+      const modal = item.modalidade_licitacao?.descricao || "—";
+      const obj = item.objeto?.substring(0,120) || "—";
+      const sit = item.situacao?.descricao || "—";
+      const data = item.data_abertura_proposta ? item.data_abertura_proposta.substring(0,10) : "—";
+      corpo.innerHTML += `
+        <tr>
+          <td>${i+1}</td>
+          <td><strong>${num}/${ano}</strong></td>
+          <td>${modal}</td>
+          <td>${obj}</td>
+          <td><span class="badge badge-azul">${sit}</span></td>
+          <td>${data}</td>
+          <td><a class="btn-link" href="https://compras.gov.br" target="_blank">🔗 Ver</a></td>
+        </tr>`;
+    });
+
+    document.getElementById("total-licit").textContent = lista.length;
+    document.getElementById("total-abertas").textContent = "—";
+    document.getElementById("total-homolog").textContent = "—";
+    document.getElementById("tabela").style.display = "table";
+  }
+
+  function limpar() {
+    document.getElementById("sel-ano").value = "2025";
+    document.getElementById("sel-modalidade").value = "";
+    document.getElementById("corpo-tabela").innerHTML = "";
+    document.getElementById("tabela").style.display = "none";
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("total-licit").textContent = "—";
+    document.getElementById("total-abertas").textContent = "—";
+    document.getElementById("total-homolog").textContent = "—";
+    document.getElementById("ano-filtro").textContent = "2025";
+  }
+
+  // Carrega automaticamente ao abrir a página
+  window.onload = () => buscarDados();
+</script>
+
+</body>
+</html>
