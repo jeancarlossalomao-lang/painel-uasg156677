@@ -1,372 +1,524 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Painel UFR — Contratações Públicas</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#333}
-    header{background:#1a5276;color:white;padding:20px 32px;display:flex;align-items:center;gap:16px}
-    header img{height:48px}
-    header h1{font-size:1.3rem}
-    header p{font-size:0.82rem;opacity:.8;margin-top:3px}
-    nav{background:#154360;display:flex;gap:4px;padding:0 32px}
-    nav button{background:none;border:none;color:#aed6f1;padding:12px 18px;cursor:pointer;font-size:.9rem;border-bottom:3px solid transparent}
-    nav button.ativo{color:white;border-bottom:3px solid #3498db}
-    nav button:hover{color:white}
-    .modulo{display:none;max-width:1100px;margin:28px auto;padding:0 16px}
-    .modulo.ativo{display:block}
-    .secao-titulo{font-size:1.1rem;font-weight:bold;color:#1a5276;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #d6eaf8}
-    .filtros{background:white;border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.07)}
-    .filtros select,.filtros input{padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:.9rem}
-    .filtros input{min-width:220px}
-    .btn{padding:8px 20px;background:#1a5276;color:white;border:none;border-radius:6px;cursor:pointer;font-size:.9rem}
-    .btn:hover{background:#154360}
-    .btn-cinza{background:#7f8c8d}
-    .btn-verde{background:#1e8449}
-    .cards{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px}
-    .card{background:white;border-radius:10px;padding:18px 22px;flex:1;min-width:160px;box-shadow:0 2px 8px rgba(0,0,0,.07);text-align:center}
-    .card .num{font-size:1.8rem;font-weight:bold;color:#1a5276}
-    .card .label{font-size:.82rem;color:#777;margin-top:4px}
-    table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07)}
-    thead{background:#1a5276;color:white}
-    th,td{padding:11px 13px;text-align:left;font-size:.86rem}
-    tr:nth-child(even){background:#f8f9fa}
-    tr:hover{background:#eaf2ff}
-    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.76rem;font-weight:bold}
-    .badge-verde{background:#d4efdf;color:#1e8449}
-    .badge-azul{background:#d6eaf8;color:#1a5276}
-    .badge-cinza{background:#eaecee;color:#555}
-    .badge-amarelo{background:#fef9e7;color:#b7950b}
-    .badge-vermelho{background:#fadbd8;color:#c0392b}
-    a.lnk{color:#1a5276;font-weight:bold;text-decoration:none;font-size:.82rem}
-    a.lnk:hover{text-decoration:underline}
-    .info{text-align:center;padding:30px;color:#888;font-size:.95rem}
-    .erro{text-align:center;padding:20px;color:#c0392b;display:none}
-    .loading{text-align:center;padding:30px;color:#888;display:none}
-    .detalhe-box{background:white;border-radius:10px;padding:20px;margin-top:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);display:none}
-    .detalhe-box h3{color:#1a5276;margin-bottom:12px}
-    .grid-info{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:16px}
-    .info-item{background:#f8f9fa;border-radius:8px;padding:12px 14px}
-    .info-item .rotulo{font-size:.78rem;color:#888;margin-bottom:3px}
-    .info-item .valor{font-size:.92rem;font-weight:600;color:#333}
-    .progress-bar-wrap{background:#eee;border-radius:10px;height:16px;margin-top:4px;overflow:hidden}
-    .progress-bar{background:#1e8449;height:100%;border-radius:10px;transition:width .5s}
-    footer{text-align:center;padding:24px;color:#aaa;font-size:.78rem;margin-top:32px}
-    @media(max-width:600px){nav{flex-wrap:wrap}nav button{padding:10px 12px;font-size:.82rem}}
-  </style>
-</head>
-<body>
-
-<header>
-  <img src="https://www.gov.br/++theme++padrao_govbr/img/govbr-logo-large.png" alt="Gov.br" onerror="this.style.display='none'"/>
-  <div>
-    <h1>🏛️ Painel de Contratações Públicas — UFR</h1>
-    <p>UASG 156677 — Universidade Federal de Rondonópolis | Dados: PNCP</p>
-  </div>
-</header>
-
-<nav>
-  <button class="ativo" onclick="trocarModulo('atas',this)">📋 Atas de Registro de Preços</button>
-  <button onclick="trocarModulo('em-breve',this)">📄 Contratos (em breve)</button>
-  <button onclick="trocarModulo('em-breve',this)">🔍 Licitações (em breve)</button>
-</nav>
-
-<!-- MÓDULO: ATAS -->
-<div id="mod-atas" class="modulo ativo">
-  <p class="secao-titulo">📋 Atas de Registro de Preços — UASG 156677 (UFR)</p>
-
-  <div class="filtros">
-    <label><strong>Ano da compra:</strong></label>
-    <select id="ata-ano">
-      <option value="2026">2026</option>
-      <option value="2025" selected>2025</option>
-      <option value="2024">2024</option>
-      <option value="2023">2023</option>
-    </select>
-    <label><strong>Nº Sequencial (opcional):</strong></label>
-    <input type="number" id="ata-seq" placeholder="Ex: 1, 2, 3..." min="1"/>
-    <button class="btn" onclick="buscarAtas()">🔍 Buscar Atas</button>
-    <button class="btn btn-cinza" onclick="limparAtas()">✕ Limpar</button>
-  </div>
-
-  <div class="cards">
-    <div class="card"><div class="num" id="card-total-atas">—</div><div class="label">Atas encontradas</div></div>
-    <div class="card"><div class="num" id="card-vigentes">—</div><div class="label">Vigentes</div></div>
-    <div class="card"><div class="num" id="card-encerradas">—</div><div class="label">Encerradas</div></div>
-    <div class="card"><div class="num" id="card-ano-atas">2025</div><div class="label">Ano selecionado</div></div>
-  </div>
-
-  <div id="loading-atas" class="loading">⏳ Buscando atas no PNCP...</div>
-  <div id="erro-atas" class="erro">❌ Erro ao buscar atas. <a href="https://pncp.gov.br/app/atas" target="_blank">Acesse o PNCP diretamente</a>.</div>
-
-  <table id="tabela-atas" style="display:none">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Nº Ata / Ano</th>
-        <th>Objeto</th>
-        <th>Vigência</th>
-        <th>Situação</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="corpo-atas"></tbody>
-  </table>
-
-  <!-- DETALHE DA ATA -->
-  <div id="detalhe-ata" class="detalhe-box">
-    <h3 id="detalhe-ata-titulo">Detalhes da Ata</h3>
-    <div class="grid-info" id="detalhe-ata-info"></div>
-
-    <p style="font-weight:bold;color:#1a5276;margin-bottom:10px">📦 Itens da Ata</p>
-    <div id="loading-itens" class="loading">⏳ Carregando itens...</div>
-    <table id="tabela-itens" style="display:none;margin-bottom:20px">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Descrição</th>
-          <th>Unidade</th>
-          <th>Qtd. Registrada</th>
-          <th>Valor Unit.</th>
-          <th>Valor Total</th>
-          <th>Saldo Qtd.</th>
-          <th>Saldo %</th>
-        </tr>
-      </thead>
-      <tbody id="corpo-itens"></tbody>
-    </table>
-    <div id="info-saldo" style="background:#eaf2ff;border-radius:8px;padding:14px;margin-bottom:12px;display:none">
-      <strong>ℹ️ Sobre o Saldo:</strong> O saldo exibido é o <strong>saldo quantitativo</strong> disponível na ata conforme registrado no PNCP.
-      O saldo financeiro de empenho está disponível no SIAFI/Tesouro Gerencial, acessível internamente pela UFR.
-    </div>
-    <button class="btn btn-cinza" onclick="fecharDetalhe()">✕ Fechar detalhes</button>
-  </div>
-</div>
-
-<!-- MÓDULO EM BREVE -->
-<div id="mod-em-breve" class="modulo">
-  <div class="info">🚧 Módulo em desenvolvimento. Em breve disponível!</div>
-</div>
-
-<footer>
-  Dados públicos via <a href="https://pncp.gov.br" target="_blank">PNCP</a> — UASG 156677 / UFR | CNPJ: 10.673.078/0001-69
-</footer>
-
-<script>
-  const CNPJ = "10673078000169";
-  const BASE = "https://pncp.gov.br/api/pncp/v1";
-
-  function trocarModulo(id, btn) {
-    document.querySelectorAll('.modulo').forEach(m => m.classList.remove('ativo'));
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('ativo'));
-    document.getElementById('mod-' + id).classList.add('ativo');
-    btn.classList.add('ativo');
-  }
-
-  function fmt(v) {
-    if (v == null) return '—';
-    return Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-  }
-
-  function fmtData(d) {
-    if (!d) return '—';
-    return d.substring(0,10).split('-').reverse().join('/');
-  }
-
-  // ========== ATAS ==========
-  async function buscarAtas() {
-    const ano = document.getElementById('ata-ano').value;
-    const seq = document.getElementById('ata-seq').value.trim();
-    document.getElementById('card-ano-atas').textContent = ano;
-    document.getElementById('loading-atas').style.display = 'block';
-    document.getElementById('erro-atas').style.display = 'none';
-    document.getElementById('tabela-atas').style.display = 'none';
-    document.getElementById('detalhe-ata').style.display = 'none';
-
-    try {
-      let atas = [];
-
-      if (seq) {
-        // Busca atas de uma compra específica
-        const url = `${BASE}/orgaos/${CNPJ}/compras/${ano}/${seq}/atas`;
-        const r = await fetch(url);
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const j = await r.json();
-        atas = Array.isArray(j) ? j : (j.data || []);
-        // Adiciona o sequencial da compra em cada ata
-        atas = atas.map(a => ({...a, _seqCompra: seq, _ano: ano}));
-      } else {
-        // Busca compras do órgão no ano e depois as atas de cada uma
-        const urlCompras = `${BASE}/orgaos/${CNPJ}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=50`;
-        const rC = await fetch(urlCompras);
-        if (!rC.ok) throw new Error('HTTP ' + rC.status);
-        const jC = await rC.json();
-        const compras = Array.isArray(jC) ? jC : (jC.data || []);
-
-        for (const c of compras) {
-          try {
-            const urlA = `${BASE}/orgaos/${CNPJ}/compras/${ano}/${c.sequencialCompra}/atas`;
-            const rA = await fetch(urlA);
-            if (!rA.ok) continue;
-            const jA = await rA.json();
-            const lista = Array.isArray(jA) ? jA : (jA.data || []);
-            lista.forEach(a => atas.push({...a, _seqCompra: c.sequencialCompra, _ano: ano, _objetoCompra: c.objetoCompra}));
-          } catch(e) {}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelGov UFR - UASG 156677</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .chart-container { position: relative; height:200px; width:100% }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .loading-shimmer {
+            background: linear-gradient(90deg, #eff1f3 0%, #e2e6e9 50%, #eff1f3 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
         }
-      }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
 
-      renderAtas(atas);
-    } catch(e) {
-      document.getElementById('loading-atas').style.display = 'none';
-      document.getElementById('erro-atas').style.display = 'block';
-      console.error(e);
-    }
-  }
+    <aside class="w-64 bg-gray-900 p-6 flex flex-col text-gray-200">
+        <div class="flex items-center gap-3 mb-10">
+            <iconify-icon icon="lucide:brain-circuit" class="text-4xl text-blue-400"></iconify-icon>
+            <span class="text-2xl font-bold">Intel<span class="text-blue-400">Gov</span></span>
+        </div>
+        
+        <nav class="flex-grow space-y-3">
+            <a href="#" class="flex items-center gap-3 p-3 rounded-lg bg-gray-800 text-white font-semibold">
+                <iconify-icon icon="lucide:layout-dashboard"></iconify-icon> Dashboard Atas
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition text-gray-400 hover:text-white">
+                <iconify-icon icon="lucide:file-text"></iconify-icon> Contratos (Breve)
+            </a>
+        </nav>
 
-  function renderAtas(atas) {
-    document.getElementById('loading-atas').style.display = 'none';
-    const corpo = document.getElementById('corpo-atas');
-    corpo.innerHTML = '';
+        <div class="bg-gray-800 p-4 rounded-xl mt-auto border border-gray-700">
+            <div class="flex items-center gap-2 mb-3 text-sm font-semibold text-blue-300">
+                <iconify-icon icon="lucide:bot"></iconify-icon> Configurar Cérebro IA
+            </div>
+            <select id="ia-provider" class="w-full p-2 rounded bg-gray-700 text-xs text-white mb-2 border border-gray-600">
+                <option value="gemini">Google Gemini</option>
+                <option value="perplexity">Perplexity AI</option>
+            </select>
+            <input type="password" id="ia-key" placeholder="Cole sua API Key aqui" class="w-full p-2 rounded bg-gray-700 text-xs text-white border border-gray-600">
+            <p class="text-[10px] text-gray-500 mt-2">Sua chave fica apenas no navegador. Não salvamos nada.</p>
+        </div>
+    </aside>
 
-    if (!atas.length) {
-      corpo.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#888">Nenhuma ata encontrada para os filtros selecionados.</td></tr>';
-      document.getElementById('card-total-atas').textContent = '0';
-      document.getElementById('card-vigentes').textContent = '0';
-      document.getElementById('card-encerradas').textContent = '0';
-      document.getElementById('tabela-atas').style.display = 'table';
-      return;
-    }
+    <main class="flex-1 flex flex-col h-full min-w-0">
+        
+        <header class="bg-white border-b border-gray-200 py-4 px-8 flex items-center justify-between shadow-sm z-10">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Painel de Inteligência - UASG 156677</h1>
+                <p class="text-sm text-gray-600">Universidade Federal de Rondonópolis | Dados: PNCP API</p>
+            </div>
+            <div class="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full font-medium text-sm border border-blue-100">
+                <span class="relative flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                </span>
+                Conectado ao PNCP Live
+            </div>
+        </header>
 
-    let vigentes = 0, encerradas = 0;
-    const hoje = new Date();
+        <div class="flex-1 overflow-y-auto p-8 bg-gray-50 space-y-8">
+            
+            <div class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <label for="filtro-ano" class="font-semibold text-gray-700">Analisar Ano da Compra:</label>
+                <select id="filtro-ano" class="p-2.5 px-5 border border-gray-300 rounded-xl bg-white text-gray-900 font-medium focus:ring-2 focus:ring-blue-200 transition">
+                    <option value="2025" selected>2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                </select>
+                <button onclick="carregarDados()" class="ml-auto bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center gap-2 shadow-md shadow-blue-100">
+                    <iconify-icon icon="lucide:refresh-cw"></iconify-icon> Atualizar Inteligência
+                </button>
+            </div>
 
-    atas.forEach((a, i) => {
-      const fimVig = a.dataVigenciaFim ? new Date(a.dataVigenciaFim) : null;
-      const vigente = fimVig && fimVig >= hoje;
-      if (vigente) vigentes++; else encerradas++;
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
+                    <div class="p-4 bg-blue-100 text-blue-600 rounded-full text-3xl flex">
+                        <iconify-icon icon="lucide:landmark"></iconify-icon>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-500">Total Registrado (Ano)</div>
+                        <div class="text-2xl font-bold text-gray-900" id="kpi-total">R$ 0,00</div>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
+                    <div class="p-4 bg-green-100 text-green-600 rounded-full text-3xl flex">
+                        <iconify-icon icon="lucide:file-signature"></iconify-icon>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-500">Atas Ativas</div>
+                        <div class="text-2xl font-bold text-gray-900" id="kpi-ativas">0</div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
+                    <div class="p-4 bg-purple-100 text-purple-600 rounded-full text-3xl flex">
+                        <iconify-icon icon="lucide:users"></iconify-icon>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-500">Fornecedores Diferentes</div>
+                        <div class="text-2xl font-bold text-gray-900" id="kpi-fornecedores">0</div>
+                    </div>
+                </div>
+            </div>
 
-      const badgeCor = vigente ? 'badge-verde' : 'badge-cinza';
-      const badgeLabel = vigente ? 'Vigente' : 'Encerrada';
-      const objeto = (a.objetoCompra || a._objetoCompra || '—').substring(0, 100);
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative">
+                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <iconify-icon icon="lucide:trending-up" class="text-blue-500"></iconify-icon> Volume de Compras por Mês
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="chart-evolucao"></canvas>
+                    </div>
+                    <div id="loading-chart-1" class="absolute inset-0 bg-white/80 flex items-center justify-center loading-shimmer rounded-2xl" style="display:none">Carregando...</div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative">
+                    <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <iconify-icon icon="lucide:pie-chart" class="text-green-500"></iconify-icon> Top 5 Fornecedores (R$)
+                    </h3>
+                    <div class="chart-container flex justify-center">
+                        <canvas id="chart-fornecedores"></canvas>
+                    </div>
+                     <div id="loading-chart-2" class="absolute inset-0 bg-white/80 flex items-center justify-center loading-shimmer rounded-2xl" style="display:none">Carregando...</div>
+                </div>
+            </div>
 
-      corpo.innerHTML += `
-        <tr>
-          <td>${i+1}</td>
-          <td><strong>${a.numeroAta || a.sequencialAta || '—'}/${a._ano}</strong><br/><small style="color:#888">Compra: ${a._seqCompra}/${a._ano}</small></td>
-          <td title="${(a.objetoCompra||a._objetoCompra||'').replace(/"/g,'')}">${objeto}${objeto.length>=100?'...':''}</td>
-          <td>${fmtData(a.dataVigenciaInicio)} a<br/>${fmtData(a.dataVigenciaFim)}</td>
-          <td><span class="badge ${badgeCor}">${badgeLabel}</span></td>
-          <td>
-            <button class="btn" style="padding:5px 10px;font-size:.8rem" onclick="verDetalheAta('${a._seqCompra}','${a._ano}','${a.sequencialAta}','${(a.objetoCompra||a._objetoCompra||'').replace(/'/g,'')}')">🔍 Ver itens</button>
-            <br/><a class="lnk" href="https://pncp.gov.br/app/atas/${CNPJ}/${a._ano}/${a._seqCompra}/${a.sequencialAta}" target="_blank">🔗 PNCP</a>
-          </td>
-        </tr>`;
-    });
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative min-h-[300px]">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+                        <iconify-icon icon="lucide:list-checks" class="text-purple-500"></iconify-icon> Detalhamento das Atas de Registro de Preços
+                    </h3>
+                    <input type="text" id="busca-tabela" placeholder="Buscar na tabela..." class="p-2 px-4 border border-gray-300 rounded-lg text-sm w-64">
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 rounded-lg">
+                            <tr>
+                                <th class="p-4 rounded-l-lg">Ata/Compra</th>
+                                <th class="p-4">Objeto (Resumo)</th>
+                                <th class="p-4">Vigência</th>
+                                <th class="p-4">Fornecedor</th>
+                                <th class="p-4">Valor Total</th>
+                                <th class="p-4 rounded-r-lg text-center">Ações de IA</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-corpo">
+                            </tbody>
+                    </table>
+                </div>
 
-    document.getElementById('card-total-atas').textContent = atas.length;
-    document.getElementById('card-vigentes').textContent = vigentes;
-    document.getElementById('card-encerradas').textContent = encerradas;
-    document.getElementById('tabela-atas').style.display = 'table';
-  }
+                <div id="loading-tabela" class="space-y-3 mt-4" style="display:none">
+                    <div class="h-12 loading-shimmer rounded"></div>
+                    <div class="h-12 loading-shimmer rounded"></div>
+                    <div class="h-12 loading-shimmer rounded"></div>
+                </div>
+            </div>
+        </div>
 
-  async function verDetalheAta(seqCompra, ano, seqAta, objeto) {
-    document.getElementById('detalhe-ata').style.display = 'block';
-    document.getElementById('detalhe-ata-titulo').textContent = `Ata ${seqAta}/${ano} — Compra ${seqCompra}/${ano}`;
-    document.getElementById('detalhe-ata-info').innerHTML = `<div class="info-item"><div class="rotulo">Objeto</div><div class="valor">${objeto || '—'}</div></div>`;
-    document.getElementById('loading-itens').style.display = 'block';
-    document.getElementById('tabela-itens').style.display = 'none';
-    document.getElementById('info-saldo').style.display = 'none';
-    document.getElementById('detalhe-ata').scrollIntoView({behavior:'smooth'});
+        <footer class="text-center py-3 text-xs text-gray-400 border-t border-gray-100 bg-white">
+            Plataforma Experimental IntelGov UFR | UASG 156677 | Dados Públicos PNCP
+        </footer>
+    </main>
 
-    try {
-      // Busca detalhes da ata
-      const urlAta = `${BASE}/orgaos/${CNPJ}/compras/${ano}/${seqCompra}/atas/${seqAta}`;
-      const rAta = await fetch(urlAta);
-      if (rAta.ok) {
-        const ata = await rAta.json();
-        document.getElementById('detalhe-ata-info').innerHTML = `
-          <div class="info-item"><div class="rotulo">Objeto</div><div class="valor">${ata.objetoCompra || objeto || '—'}</div></div>
-          <div class="info-item"><div class="rotulo">Nº da Ata</div><div class="valor">${ata.numeroAta || seqAta}</div></div>
-          <div class="info-item"><div class="rotulo">Vigência Início</div><div class="valor">${fmtData(ata.dataVigenciaInicio)}</div></div>
-          <div class="info-item"><div class="rotulo">Vigência Fim</div><div class="valor">${fmtData(ata.dataVigenciaFim)}</div></div>
-          <div class="info-item"><div class="rotulo">Fornecedor</div><div class="valor">${ata.nomeRazaoSocialFornecedor || '—'}</div></div>
-          <div class="info-item"><div class="rotulo">CNPJ Fornecedor</div><div class="valor">${ata.cnpjFornecedor || '—'}</div></div>
-        `;
-      }
+    <div id="modal-ia" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden transform scale-95 transition-transform duration-300 border border-gray-100">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-blue-600 text-white rounded-2xl flex text-xl">
+                        <iconify-icon icon="lucide:bot"></iconify-icon>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900" id="modal-ia-titulo">Análise Inteligente da Ata</h3>
+                        <p class="text-xs text-gray-500" id="modal-ia-subtitulo">Gerado por IA a partir de dados reais do PNCP</p>
+                    </div>
+                </div>
+                <button onclick="fecharModalIA()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 flex transition">
+                    <iconify-icon icon="lucide:x" class="text-2xl"></iconify-icon>
+                </button>
+            </div>
+            
+            <div class="p-8 overflow-y-auto flex-1 prose prose-sm prose-blue max-w-none text-gray-700 space-y-4" id="modal-ia-conteudo">
+                <div class="flex flex-col items-center justify-center text-center py-10 text-gray-500">
+                    <iconify-icon icon="svg-spinners:ring-resize" class="text-5xl mb-4 text-blue-500"></iconify-icon>
+                    <p class="font-semibold text-gray-700">O Cérebro IA está lendo a Ata...</p>
+                    <p class="text-sm">Isso pode levar de 10 a 30 segundos.</p>
+                </div>
+            </div>
 
-      // Busca itens da ata
-      const urlItens = `${BASE}/orgaos/${CNPJ}/compras/${ano}/${seqCompra}/atas/${seqAta}/itens`;
-      const rItens = await fetch(urlItens);
-      if (!rItens.ok) throw new Error('HTTP ' + rItens.status);
-      const jItens = await rItens.json();
-      const itens = Array.isArray(jItens) ? jItens : (jItens.data || []);
+            <div class="p-5 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 flex justify-between items-center">
+                <span>⚠️ Lembre-se: A IA pode cometer erros. Valide sempre com o edital oficial.</span>
+                <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300">Copiar Análise</button>
+            </div>
+        </div>
+    </div>
 
-      document.getElementById('loading-itens').style.display = 'none';
-      renderItens(itens);
-    } catch(e) {
-      document.getElementById('loading-itens').style.display = 'none';
-      document.getElementById('tabela-itens').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#c0392b">Erro ao carregar itens.</td></tr>';
-      document.getElementById('tabela-itens').style.display = 'table';
-      console.error(e);
-    }
-  }
+    <script>
+        // Configurações
+        const CNPJ_UFR = "10673078000169";
+        const API_BASE_PNCP = "https://pncp.gov.br/api/pncp/v1";
+        
+        // Estado Global dos Dados
+        let dadosAtas = [];
+        let chartEvolucao = null;
+        let chartFornecedores = null;
 
-  function renderItens(itens) {
-    const corpo = document.getElementById('corpo-itens');
-    corpo.innerHTML = '';
+        // Formatação
+        const fmtMonetario = (v) => v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00';
+        const fmtData = (d) => d ? d.substring(0, 10).split('-').reverse().join('/') : '—';
 
-    if (!itens.length) {
-      corpo.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#888">Nenhum item encontrado.</td></tr>';
-      document.getElementById('tabela-itens').style.display = 'table';
-      return;
-    }
+        // Inicialização
+        window.onload = () => {
+            carregarDados();
+            
+            // Ativar busca na tabela
+            document.getElementById('busca-tabela').addEventListener('keyup', function(e) {
+                const termo = e.target.value.toLowerCase();
+                const linhas = document.querySelectorAll('#tabela-corpo tr');
+                linhas.forEach(linha => {
+                    const texto = linha.innerText.toLowerCase();
+                    linha.style.display = texto.includes(termo) ? '' : 'none';
+                });
+            });
+        };
 
-    itens.forEach((item, i) => {
-      const qtdReg = item.quantidadeRegistrada || item.quantidade || 0;
-      const qtdSaldo = item.quantidadeSaldo != null ? item.quantidadeSaldo : (item.saldoQuantidade || qtdReg);
-      const pct = qtdReg > 0 ? Math.round((qtdSaldo / qtdReg) * 100) : 0;
-      const corBarra = pct > 50 ? '#1e8449' : pct > 20 ? '#b7950b' : '#c0392b';
-      const vUnit = item.valorUnitario || item.valorUnitarioEstimado || 0;
-      const vTotal = qtdReg * vUnit;
+        async function carregarDados() {
+            const ano = document.getElementById('filtro-ano').value;
+            setLoading(true);
+            dadosAtas = [];
 
-      corpo.innerHTML += `
-        <tr>
-          <td>${i+1}</td>
-          <td>${item.descricao || item.materialServico?.descricao || '—'}</td>
-          <td>${item.unidadeMedida || '—'}</td>
-          <td style="text-align:right">${Number(qtdReg).toLocaleString('pt-BR')}</td>
-          <td style="text-align:right">R$ ${fmt(vUnit)}</td>
-          <td style="text-align:right">R$ ${fmt(vTotal)}</td>
-          <td style="text-align:right">${Number(qtdSaldo).toLocaleString('pt-BR')}</td>
-          <td style="min-width:100px">
-            <div style="font-size:.78rem;text-align:right;margin-bottom:3px">${pct}%</div>
-            <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%;background:${corBarra}"></div></div>
-          </td>
-        </tr>`;
-    });
+            try {
+                // 1. Buscar Compras do Ano para pegar os sequenciais
+                const urlCompras = `${API_BASE_PNCP}/orgaos/${CNPJ_UFR}/compras?anoCompra=${ano}&pagina=1&tamanhoPagina=100`;
+                const respC = await fetch(urlCompras);
+                if (!respC.ok) throw "Erro API Compras";
+                const jsonC = await respC.json();
+                const listaCompras = jsonC.data || [];
 
-    document.getElementById('tabela-itens').style.display = 'table';
-    document.getElementById('info-saldo').style.display = 'block';
-  }
+                // 2. Para cada compra, buscar as ATAs vinculadas (Isso é lento, mas PNCP exige)
+                const promessasAtas = listaCompras.map(async (compra) => {
+                    try {
+                        const urlA = `${API_BASE_PNCP}/orgaos/${CNPJ_UFR}/compras/${ano}/${compra.sequencialCompra}/atas`;
+                        const respA = await fetch(urlA);
+                        if (!respA.ok) return [];
+                        const listaA = await respA.json();
+                        // Enriquecer dados da ata com dados da compra pai
+                        return listaA.map(ata => ({
+                            ...ata,
+                            _anoCompra: ano,
+                            _seqCompra: compra.sequencialCompra,
+                            _objetoCompra: compra.objetoCompra,
+                            _dataAtaFmt: ata.dataAssinatura ? new Date(ata.dataAssinatura) : null
+                        }));
+                    } catch (e) { return []; }
+                });
 
-  function fecharDetalhe() {
-    document.getElementById('detalhe-ata').style.display = 'none';
-  }
+                const resultadosAtas = await Promise.all(promessasAtas);
+                dadosAtas = resultadosAtas.flat();
 
-  function limparAtas() {
-    document.getElementById('ata-ano').value = '2025';
-    document.getElementById('ata-seq').value = '';
-    document.getElementById('loading-atas').style.display = 'none';
-    document.getElementById('erro-atas').style.display = 'none';
-    document.getElementById('tabela-atas').style.display = 'none';
-    document.getElementById('detalhe-ata').style.display = 'none';
-    ['card-total-atas','card-vigentes','card-encerradas'].forEach(id => document.getElementById(id).textContent = '—');
-    document.getElementById('card-ano-atas').textContent = '2025';
-  }
+                atualizarInterface();
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao conectar com PNCP. Tente novamente.");
+            } finally {
+                setLoading(false);
+            }
+        }
 
-  window.onload = () => {};
-</script>
+        function setLoading(isLoading) {
+            const display = isLoading ? 'flex' : 'none';
+            document.getElementById('loading-tabela').style.display = isLoading ? 'block' : 'none';
+            document.getElementById('tabela-corpo').style.display = isLoading ? 'none' : 'table-row-group';
+            document.getElementById('loading-chart-1').style.display = display;
+            document.getElementById('loading-chart-2').style.display = display;
+        }
+
+        function atualizarInterface() {
+            renderizarKPIs();
+            renderizarGraficos();
+            renderizarTabela();
+        }
+
+        function renderizarKPIs() {
+            const totalVal = dadosAtas.reduce((sum, a) => sum + (a.valorTotalAta || 0), 0);
+            document.getElementById('kpi-total').textContent = fmtMonetario(totalVal);
+            
+            const hoje = new Date();
+            const ativas = dadosAtas.filter(a => !a.dataVigenciaFim || new Date(a.dataVigenciaFim) >= hoje).length;
+            document.getElementById('kpi-ativas').textContent = ativas;
+
+            const fns = new Set(dadosAtas.map(a => a.cnpjFornecedor).filter(c => c));
+            document.getElementById('kpi-fornecedores').textContent = fns.size;
+        }
+
+        function renderizarTabela() {
+            const corpo = document.getElementById('tabela-corpo');
+            corpo.innerHTML = '';
+
+            if (dadosAtas.length === 0) {
+                corpo.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">Nenhuma Ata encontrada para este ano.</td></tr>`;
+                return;
+            }
+
+            // Ordenar por data assinatura desc
+            dadosAtas.sort((a,b) => (b._dataAtaFmt || 0) - (a._dataAtaFmt || 0));
+
+            dadosAtas.forEach(ata => {
+                const vigencia = `${fmtData(ata.dataVigenciaInicio)} - ${fmtData(ata.dataVigenciaFim)}`;
+                const objeto = (ata._objetoCompra || '—').substring(0, 80) + '...';
+                
+                corpo.innerHTML += `
+                    <tr class="border-b border-gray-100 hover:bg-blue-50/50 transition">
+                        <td class="p-4 font-medium text-gray-900">
+                            Ata ${ata.numeroAta || ata.sequencialAta}/${ata._anoCompra}<br>
+                            <a href="https://pncp.gov.br/app/atas/${CNPJ_UFR}/${ata._anoCompra}/${ata._seqCompra}/${ata.sequencialAta}" target="_blank" class="text-xs text-blue-600 hover:underline">Ver no PNCP 🔗</a>
+                        </td>
+                        <td class="p-4 text-xs" title="${ata._objetoCompra || ''}">${objeto}</td>
+                        <td class="p-4 text-xs">${vigencia}</td>
+                        <td class="p-4 text-xs">
+                            ${ata.nomeRazaoSocialFornecedor || '—'}<br>
+                            <span class="text-gray-400 text-xs">${ata.cnpjFornecedor || ''}</span>
+                        </td>
+                        <td class="p-4 font-semibold text-gray-800">${fmtMonetario(ata.valorTotalAta)}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="analisarComIA('${ata._anoCompra}', '${ata._seqCompra}', '${ata.sequencialAta}')" class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg font-semibold hover:bg-blue-600 transition flex items-center gap-1.5 mx-auto">
+                                <iconify-icon icon="lucide:bot"></iconify-icon> Analisar com IA
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- PARTE REVOLUCIONÁRIA: GRÁFICOS ---
+        function renderizarGraficos() {
+            // Destruir gráficos antigos se existirem
+            if(chartEvolucao) chartEvolucao.destroy();
+            if(chartFornecedores) chartFornecedores.destroy();
+
+            // Prep Dados 1: Evolução Mensal
+            const meses = Array(12).fill(0);
+            dadosAtas.forEach(a => {
+                if(a._dataAtaFmt) meses[a._dataAtaFmt.getMonth()] += (a.valorTotalAta || 0);
+            });
+
+            const ctx1 = document.getElementById('chart-evolucao').getContext('2d');
+            chartEvolucao = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+                    datasets: [{
+                        label: 'Volume R$',
+                        data: meses,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#3b82f6',
+                        pointRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+            });
+
+            // Prep Dados 2: Top Fornecedores
+            const fnsMap = {};
+            dadosAtas.forEach(a => {
+                const nome = (a.nomeRazaoSocialFornecedor || 'Desconhecido').substring(0, 20);
+                fnsMap[nome] = (fnsMap[nome] || 0) + (a.valorTotalAta || 0);
+            });
+            
+            const sortedFns = Object.entries(fnsMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            
+            const ctx2 = document.getElementById('chart-fornecedores').getContext('2d');
+            chartFornecedores = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: sortedFns.map(f => f[0]),
+                    datasets: [{
+                        data: sortedFns.map(f => f[1]),
+                        backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+            });
+        }
+
+        // --- PARTE REVOLUCIONÁRIA: INTEGRAÇÃO COM IA ---
+        
+        const modalIA = document.getElementById('modal-ia');
+        const conteudoIA = document.getElementById('modal-ia-conteudo');
+
+        function fecharModalIA() {
+            modalIA.classList.add('opacity-0', 'pointer-events-none');
+            modalIA.querySelector('.scale-95').classList.add('scale-95');
+            modalIA.querySelector('.scale-95').classList.remove('scale-100');
+        }
+
+        async function analisarComIA(ano, seqCompra, seqAta) {
+            const apiKey = document.getElementById('ia-key').value;
+            const provider = document.getElementById('ia-provider').value;
+
+            if (!apiKey) {
+                alert("🚫 Revolução cancelada: Você precisa colar sua API KEY na barra lateral para usar a IA.");
+                return;
+            }
+
+            // Achar a ata no nosso estado
+            const ataVal = dadosAtas.find(a => a._anoCompra == ano && a._seqCompra == seqCompra && a.sequencialAta == seqAta);
+            if(!ataVal) return;
+
+            // Abrir Modal com Loading
+            document.getElementById('modal-ia-titulo').textContent = `Análise Inteligente: Ata ${ataVal.numeroAta}/${ano}`;
+            conteudoIA.innerHTML = `
+                <div class="flex flex-col items-center justify-center text-center py-10 text-gray-500 loading-shimmer rounded-xl">
+                    <iconify-icon icon="lucide:brain-circuit" class="text-5xl mb-4 text-blue-500 animate-pulse"></iconify-icon>
+                    <p class="font-semibold text-gray-700">O Cérebro IA (${provider}) está analisando os dados...</p>
+                    <p class="text-sm">Enviando contexto da Ata e solicitando resumo executivo.</p>
+                </div>
+            `;
+            modalIA.classList.remove('opacity-0', 'pointer-events-none');
+            // Trigger animation
+            setTimeout(() => { modalIA.querySelector('.scale-95').classList.remove('scale-95'); modalIA.querySelector('.scale-95').classList.add('scale-100'); }, 10);
+
+
+            // Preparar o Contexto para a IA
+            const contextoPrompt = `
+                Você é um especialista em contratações públicas brasileiras (Lei 14.133/2021).
+                Analise os dados desta Ata de Registro de Preços da Universidade Federal de Rondonópolis (UFR):
+                - Objeto: ${ataVal._objetoCompra}
+                - Fornecedor: ${ataVal.nomeRazaoSocialFornecedor} (${ataVal.cnpjFornecedor})
+                - Valor Total: R$ ${ataVal.valorTotalAta}
+                - Vigência: ${fmtData(ataVal.dataVigenciaInicio)} até ${fmtData(ataVal.dataVigenciaFim)}
+                
+                Gere um resumo executivo EM PORTUGUÊS usando formatação HTML básica (<b>, <ul>, <li>).
+                ESTRUTURA DA RESPOSTA:
+                1. <b>Resumo Simples do Objeto</b> (Em linguagem clara).
+                2. <b>Pontos de Atenção ou Riscos</b> (Se houver, baseado no valor, tipo de objeto ou fornecedor).
+                3. <b>Sugestão de Acompanhamento</b> para o gestor.
+                Seja conciso e direto. Não invente dados.
+            `;
+
+            try {
+                let respostaTexto = "";
+
+                if (provider === 'gemini') {
+                    // Chamada API Gemini
+                    const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                    const resp = await fetch(urlGemini, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: contextoPrompt }] }] })
+                    });
+                    const jsonIA = await resp.json();
+                    if(jsonIA.error) throw jsonIA.error.message;
+                    respostaTexto = jsonIA.candidates[0].content.parts[0].text;
+
+                } else if (provider === 'perplexity') {
+                    // Chamada API Perplexity
+                    const resp = await fetch('https://api.perplexity.ai/chat/completions', {
+                        method: 'POST',
+                        headers: { 
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: "pplx-7b-online", // Ou modelo de sua preferência
+                            messages: [
+                                {role: "system", content: "Você é um assistente analítico de dados governamentais."},
+                                {role: "user", content: contextoPrompt}
+                            ]
+                        })
+                    });
+                    const jsonIA = await resp.json();
+                    if(jsonIA.error) throw jsonIA.error.message;
+                    respostaTexto = jsonIA.choices[0].message.content;
+                }
+
+                // Renderizar resposta (tratando markdown simples que a IA costuma mandar, convertendo p/ HTML)
+                conteudoIA.innerHTML = formatarRespostaIA(respostaTexto);
+
+            } catch (error) {
+                console.error(error);
+                conteudoIA.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 text-red-800 p-5 rounded-xl text-center">
+                        <iconify-icon icon="lucide:alert-triangle" class="text-4xl mb-2"></iconify-icon>
+                        <p class="font-bold">Erro na comunicação com a IA.</p>
+                        <p class="text-sm">Verifique se sua API Key está correta e se você tem saldo no provedor (${provider}).</p>
+                        <p class="text-xs mt-2 text-red-600">Detalhe: ${error}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Função simples para converter o markdown que a IA envia em HTML básico
+        function formatarRespostaIA(texto) {
+            // Converte **negrito** para <b>
+            texto = texto.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            // Converte linhas que começam com * ou - em <li> (bem simplista)
+            texto = texto.replace(/^\s*[\*-]\s*(.*)$/gmd, '<li>$1</li>');
+            // Envolve listas em <ul>
+            texto = texto.replace(/(<li>.*<\/li>)/gms, '<ul class="list-disc pl-5 space-y-1">$1</ul>');
+            // Converte quebras de linha em <p>
+            texto = texto.split('\n').filter(p => p.trim()).map(p => p.startsWith('<u') ? p : `<p>${p}</p>`).join('');
+            
+            return texto;
+        }
+    </script>
 </body>
 </html>
