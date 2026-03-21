@@ -811,24 +811,60 @@ function toast(msg, type = '') {
    ============================================================ */
 const API = {
 
-  /* Busca atas com paginação automática */
+  /* Busca atas com paginação automática
+     A API /atas filtra por dataVigenciaFim (período de vigência)
+     Limite: 365 dias por consulta, tamanhoPagina entre 10 e 20 */
   async getAtas(ano) {
+    // Estratégia: buscar atas vigentes a partir de hoje + 365 dias
+    // E também atas do ano selecionado que podem ter vencido
     const hoje = new Date();
-    const dataFinal = `${hoje.getFullYear()}${String(hoje.getMonth()+1).padStart(2,'0')}${String(hoje.getDate()).padStart(2,'0')}`;
-    const dataInicial = `${ano}0101`;
+    const fmt = d => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
 
-    let pagina = 1, todas = [];
-    while (true) {
-      const url = `${CFG.BASE_CONSUL}/atas?dataInicial=${dataInicial}&dataFinal=${dataFinal}&cnpj=${CFG.CNPJ_UFR}&pagina=${pagina}&tamanhoPagina=${CFG.PAGE_SIZE}`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`API retornou ${r.status}`);
-      const d = await r.json();
-      const lista = d.data || [];
-      todas = todas.concat(lista);
-      setProgress(Math.min(80, 20 + (pagina * 20)));
-      if (lista.length < CFG.PAGE_SIZE || todas.length >= (d.totalRegistros || 9999)) break;
-      pagina++;
+    // Janela 1: atas ainda vigentes (hoje → hoje+365)
+    const janelas = [
+      { ini: fmt(hoje), fim: fmt(new Date(hoje.getTime() + 365*86400000)) },
+    ];
+
+    // Se o ano selecionado for passado, adicionar janela histórica
+    const anoNum = parseInt(ano);
+    const anoAtual = hoje.getFullYear();
+    if (anoNum < anoAtual) {
+      const iniHist = new Date(anoNum, 0, 1);
+      const fimHist = new Date(Math.min(new Date(anoNum, 11, 31).getTime(), hoje.getTime()));
+      // Dividir em chunks de 365 dias se necessário
+      let cur = new Date(iniHist);
+      while (cur < fimHist) {
+        const end = new Date(Math.min(cur.getTime() + 364*86400000, fimHist.getTime()));
+        janelas.push({ ini: fmt(cur), fim: fmt(end) });
+        cur = new Date(end.getTime() + 86400000);
+      }
     }
+
+    const vistas = new Set();
+    let todas = [];
+    let progBase = 10;
+
+    for (const janela of janelas) {
+      let pagina = 1;
+      while (true) {
+        const url = `${CFG.BASE_CONSUL}/atas?dataInicial=${janela.ini}&dataFinal=${janela.fim}&cnpj=${CFG.CNPJ_UFR}&pagina=${pagina}&tamanhoPagina=20`;
+        const r = await fetch(url);
+        if (!r.ok) break;
+        const d = await r.json();
+        const lista = (d.data || []).filter(a => {
+          const id = a.numeroControlePNCPAta;
+          if (vistas.has(id)) return false;
+          vistas.add(id);
+          return true;
+        });
+        todas = todas.concat(lista);
+        setProgress(Math.min(80, progBase + (pagina * 10)));
+        if ((d.data || []).length < 20 || todas.length >= (d.totalRegistros || 9999)) break;
+        pagina++;
+      }
+      progBase += 15;
+    }
+
     return todas;
   },
 
@@ -908,26 +944,27 @@ function renderAtas() {
 
   let lista = STATE.atas.filter(a => {
     // Filtro tipo
-    const cnpjGer = (a.orgaoEntidade?.cnpj || '').replace(/\D/g,'');
-    const eUFR = cnpjGer === CFG.CNPJ_UFR;
-    if (tipo === 'ufr' && !eUFR) return false;
-    if (tipo === 'externa' && eUFR) return false;
+    const cnpjGerFilt = (a.cnpjOrgao || '').replace(/\D/g,'');
+    const eUFRFilt = cnpjGerFilt === CFG.CNPJ_UFR;
+    if (tipo === 'ufr' && !eUFRFilt) return false;
+    if (tipo === 'externa' && eUFRFilt) return false;
 
     // Filtro prazo
     if (prazo) {
-      const d = diasRestantes(a.dataVigenciaFim);
+      const d = diasRestantes(a.vigenciaFim);
       if (d === null || d > parseInt(prazo) || d < 0) return false;
     }
 
     // Filtro texto — todos os tokens devem estar presentes
     if (tokens.length > 0) {
       const haystack = [
-        a.numeroControlePNCP || '',
-        a.objetoCompra || '',
-        a.orgaoEntidade?.razaoSocial || '',
-        a.orgaoEntidade?.cnpj || '',
-        a.unidadeOrgao?.nomeUnidade || '',
-        a.sequencialCompra || '',
+        a.numeroControlePNCPAta || '',
+        a.numeroControlePNCPCompra || '',
+        a.objetoContratacao || '',
+        a.nomeOrgao || '',
+        a.cnpjOrgao || '',
+        a.nomeUnidadeOrgao || '',
+        a.numeroAtaRegistroPreco || '',
       ].join(' ').toLowerCase();
 
       if (!tokens.every(t => haystack.includes(t))) return false;
@@ -940,8 +977,8 @@ function renderAtas() {
 
   // Atualizar stats
   const hoje = new Date(); hoje.setHours(0,0,0,0);
-  const vigentes  = STATE.atas.filter(a => { const d = diasRestantes(a.dataVigenciaFim); return d !== null && d >= 0; }).length;
-  const vencendo  = STATE.atas.filter(a => { const d = diasRestantes(a.dataVigenciaFim); return d !== null && d >= 0 && d <= 60; }).length;
+  const vigentes  = STATE.atas.filter(a => { const d = diasRestantes(a.vigenciaFim); return d !== null && d >= 0; }).length;
+  const vencendo  = STATE.atas.filter(a => { const d = diasRestantes(a.vigenciaFim); return d !== null && d >= 0 && d <= 60; }).length;
   document.getElementById('stat-total').textContent    = STATE.atas.length;
   document.getElementById('stat-vigentes').textContent = vigentes;
   document.getElementById('stat-vencendo').textContent = vencendo;
@@ -962,28 +999,34 @@ function renderAtas() {
   }
 
   tbody.innerHTML = lista.map(a => {
-    const ctrl = a.numeroControlePNCP || '';
-    // Extrair ano e sequencial do número de controle: CNPJ-tipo-SEQANO
-    const partes = ctrl.split('-');
-    const anoSeq = partes[2] || '';
-    const seq    = parseInt(anoSeq.replace(/\/.+/,'')) || 0;
-    const anoCtrl = anoSeq.includes('/') ? anoSeq.split('/')[1] : (document.getElementById('filtro-ano').value);
+    // Campos reais da API de atas:
+    // numeroControlePNCPAta, numeroControlePNCPCompra, numeroAtaRegistroPreco,
+    // anoAta, vigenciaInicio, vigenciaFim, objetoContratacao, cnpjOrgao, nomeOrgao
+    const ctrlAta    = a.numeroControlePNCPAta || '';
+    const ctrlCompra = a.numeroControlePNCPCompra || '';
 
-    const cnpjGer = (a.orgaoEntidade?.cnpj || '').replace(/\D/g,'');
+    // Extrair CNPJ gerenciador, tipo, seq e ano da compra
+    // Formato: CNPJ-tipo-SEQ/ANO
+    const partesCompra = ctrlCompra.split('-');
+    const cnpjGer  = (partesCompra[0] || CFG.CNPJ_UFR).replace(/\D/g,'');
+    const seqAnoStr = partesCompra[2] || '';
+    const seq      = seqAnoStr.includes('/') ? parseInt(seqAnoStr.split('/')[0]) : 0;
+    const anoCtrl  = seqAnoStr.includes('/') ? seqAnoStr.split('/')[1] : String(a.anoAta || '');
+
     const eUFR = cnpjGer === CFG.CNPJ_UFR;
     const vinculo = eUFR
       ? '<span class="badge badge-navy">UFR GERENCIA</span>'
-      : `<span class="badge badge-gold" title="${a.orgaoEntidade?.razaoSocial || ''}">EXTERNA</span>`;
+      : `<span class="badge badge-gold" title="${a.nomeOrgao || ''}">EXTERNA</span>`;
 
-    const numAta = a.sequencialAta
-      ? `Ata ${String(a.sequencialAta).padStart(5,'0')}/${anoCtrl}`
-      : ctrl;
+    const numAta = a.numeroAtaRegistroPreco
+      ? `Ata ${String(a.numeroAtaRegistroPreco).padStart(5,'0')}/${a.anoAta || anoCtrl}`
+      : ctrlAta;
 
-    const objeto = (a.objetoCompra || '').length > 80
-      ? (a.objetoCompra || '').substring(0, 80) + '...'
-      : (a.objetoCompra || '—');
+    const objeto = (a.objetoContratacao || '').length > 90
+      ? (a.objetoContratacao || '').substring(0, 90) + '...'
+      : (a.objetoContratacao || '—');
 
-    const saldoId = `saldo-${ctrl.replace(/[^a-z0-9]/gi,'_')}`;
+    const saldoId = `saldo-${ctrlAta.replace(/[^a-z0-9]/gi,'_')}`;
 
     return `<tr>
       <td>
@@ -993,7 +1036,7 @@ function renderAtas() {
       <td style="max-width:320px">
         <div style="font-size:13px;line-height:1.4">${objeto}</div>
       </td>
-      <td style="white-space:nowrap">${prazoHTML(a.dataVigenciaFim)}</td>
+      <td style="white-space:nowrap">${prazoHTML(a.vigenciaFim)}</td>
       <td class="saldo-cell">
         <div id="${saldoId}" class="saldo-loading">
           <span class="spinner dark" style="width:12px;height:12px;border-width:1.5px"></span>
@@ -1002,7 +1045,7 @@ function renderAtas() {
       </td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm"
-          onclick="abrirItens('${ctrl}','${cnpjGer}','${anoCtrl}','${seq}')">
+          onclick="abrirItens('${ctrlAta}','${cnpjGer}','${anoCtrl}','${seq}')">
           Ver Itens
         </button>
       </td>
@@ -1015,17 +1058,18 @@ function renderAtas() {
 
 /* Carrega o saldo total disponível de uma ata em background */
 async function carregarSaldoAta(ata) {
-  const ctrl = ata.numeroControlePNCP || '';
-  const saldoId = `saldo-${ctrl.replace(/[^a-z0-9]/gi,'_')}`;
+  const ctrlAta    = ata.numeroControlePNCPAta || '';
+  const ctrlCompra = ata.numeroControlePNCPCompra || '';
+  const saldoId = `saldo-${ctrlAta.replace(/[^a-z0-9]/gi,'_')}`;
   const el = document.getElementById(saldoId);
   if (!el) return;
 
   try {
-    const partes = ctrl.split('-');
-    const anoSeq = partes[2] || '';
-    const seq    = parseInt(anoSeq.replace(/\/.+/,'')) || 0;
-    const anoCtrl = anoSeq.includes('/') ? anoSeq.split('/')[1] : (document.getElementById('filtro-ano').value);
-    const cnpjGer = (ata.orgaoEntidade?.cnpj || '').replace(/\D/g,'');
+    const partesCompra = ctrlCompra.split('-');
+    const cnpjGer  = (partesCompra[0] || CFG.CNPJ_UFR).replace(/\D/g,'');
+    const seqAnoStr = partesCompra[2] || '';
+    const seq      = seqAnoStr.includes('/') ? parseInt(seqAnoStr.split('/')[0]) : 0;
+    const anoCtrl  = seqAnoStr.includes('/') ? seqAnoStr.split('/')[1] : String(ata.anoAta || '');
 
     // Buscar itens e resultados em paralelo
     const [itens, contratos] = await Promise.all([
