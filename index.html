@@ -527,7 +527,9 @@ function getAnoVigencia(ata) {
 function getPNCPLink(ata) {
   const id = getAtaId(ata);
   if (!id) return null;
-  return 'https://pncp.gov.br/app/atas/' + encodeURIComponent(id);
+  const p = parseAtaId(id);
+  if (!p) return null;
+  return 'https://pncp.gov.br/app/editais/' + p.cnpj + '/' + p.anoCompra + '/' + p.seqCompra;
 }
 
 // ── CARREGAR ATAS ────────────────────────────────────────────────────────────
@@ -736,7 +738,7 @@ async function verItens(ataId) {
   const ata = todasAtas.find(function(a) { return getAtaId(a) === ataId; });
   if (!ata) { toast('Ata não encontrada', 'error'); return; }
 
-  document.getElementById('modal-title').textContent = 'Itens da Licitação — Ata ' + getNumeroAta(ata);
+  document.getElementById('modal-title').textContent = 'Itens da Ata ' + getNumeroAta(ata);
   document.getElementById('modal-subtitle').textContent = getObjeto(ata);
 
   const fim = getVigenciaFim(ata);
@@ -755,7 +757,7 @@ async function verItens(ataId) {
     + '<div class="modal-meta-item"><div class="modal-meta-label">Ano de Vigência</div><div class="modal-meta-value">' + (anoVig === 1 ? '1&ordm; Ano (original)' : anoVig === 2 ? 'Prorrogação (2&ordm; Ano)' : '—') + '</div></div>'
     + (link ? '<div class="modal-meta-item"><div class="modal-meta-label">Link PNCP</div><div class="modal-meta-value"><a href="' + link + '" target="_blank" style="color:var(--accent)">Acessar no PNCP &#8599;</a></div></div>' : '');
 
-  document.getElementById('modal-itens-content').innerHTML = '<div class="empty-state"><div class="icon">&#9203;</div><p>Carregando itens da licitação...</p></div>';
+  document.getElementById('modal-itens-content').innerHTML = '<div class="empty-state"><div class="icon">&#9203;</div><p>Carregando itens da ata (buscando resultados no PNCP, pode demorar ~30s)...</p></div>';
   document.getElementById('modal-itens').classList.add('show');
 
   // Extrair anoCompra e seqCompra do ID da ata
@@ -765,75 +767,72 @@ async function verItens(ataId) {
     return;
   }
 
-  // Usar chave da compra para cache (todas as atas da mesma compra compartilham itens)
-  const cacheKey = parsed.anoCompra + '-' + parsed.seqCompra;
+  // Usar chave da ata para cache (cada ata tem seus itens específicos)
+  const cacheKey = ataId;
 
   if (atasComItens[cacheKey]) {
-    renderItens(atasComItens[cacheKey]);
+    renderItensAta(atasComItens[cacheKey]);
     return;
   }
 
   try {
-    const r = await fetch(EDGE + '?action=itens&anoCompra=' + parsed.anoCompra + '&seqCompra=' + parsed.seqCompra);
+    const r = await fetch(EDGE + '?action=itens_ata&anoCompra=' + parsed.anoCompra + '&seqCompra=' + parsed.seqCompra + '&seqAta=' + parsed.seqAta);
     if (!r.ok) throw new Error('Erro HTTP ' + r.status);
     const data = await r.json();
-    const itens = data.data || [];
-    atasComItens[cacheKey] = itens;
-    // Também salvar com o ataId para busca nos filtros
-    atasComItens[ataId] = itens;
-    renderItens(itens);
+    const result = {
+      fornecedor: data.fornecedor || '',
+      cnpjFornecedor: data.cnpjFornecedor || '',
+      totalHomologado: data.totalHomologado || 0,
+      itens: data.data || []
+    };
+    atasComItens[cacheKey] = result;
+    renderItensAta(result);
   } catch (e) {
     document.getElementById('modal-itens-content').innerHTML = '<div class="empty-state"><div class="icon">&#10060;</div><p>Erro ao carregar itens: ' + e.message + '</p></div>';
   }
 }
 
-function renderItens(itens) {
+function renderItensAta(result) {
+  var itens = result.itens || [];
   if (!itens.length) {
-    document.getElementById('modal-itens-content').innerHTML = '<div class="empty-state"><div class="icon">&#128230;</div><p>Nenhum item encontrado para esta ata.</p></div>';
+    document.getElementById('modal-itens-content').innerHTML = '<div class="empty-state"><div class="icon">&#128230;</div><p>Nenhum item encontrado para esta ata.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">A busca de resultados pode demorar para compras com muitos itens. Tente novamente em alguns instantes.</p></div>';
     return;
   }
 
+  var fornecedorInfo = result.fornecedor ? '<div style="background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:13px"><strong>Fornecedor:</strong> ' + result.fornecedor + (result.cnpjFornecedor ? ' <span style="opacity:.8">(CNPJ: ' + result.cnpjFornecedor + ')</span>' : '') + '</div>' : '';
 
   const rows = itens.map(function(it) {
-    const desc = it.descricao || it.nome || '—';
-    const un = it.unidadeMedida || it.unidade_medida || '';
-    const qtd = it.quantidade || it.quantidade_registrada || 0;
-    const vuEst = it.valorUnitarioEstimado || it.valor_unitario_estimado || 0;
-    const valorTotal = it.valorTotal || it.valor_total || 0;
-    const situacao = it.situacao || '';
-    const numItem = it.numeroItem || it.numero_item || '';
-    const material = it.materialOuServico || '';
-
-    const sitBadge = situacao === 'Homologado' ? 'badge-green'
-      : situacao === 'Fracassado' ? 'badge-red'
-      : situacao === 'Deserto' ? 'badge-orange'
-      : 'badge-gray';
+    const desc = it.descricao || '—';
+    const un = it.unidade || it.unidadeMedida || '';
+    const qtdHomologada = it.qtdHomologada || 0;
+    const vlrUnit = it.vlrUnitHomologado || 0;
+    const vlrTotal = it.vlrTotalHomologado || 0;
+    const situacao = it.situacao || 'Homologado';
+    const numItem = it.numItem || '';
 
     return '<tr>'
       + '<td style="color:var(--text-muted);font-size:11px;white-space:nowrap;text-align:center">' + numItem + '</td>'
-      + '<td><div style="max-width:280px" title="' + desc.replace(/"/g, '&quot;') + '">' + desc + '</div>'
-      +   (material ? '<div style="font-size:10px;color:var(--text-muted)">' + material + '</div>' : '')
-      + '</td>'
+      + '<td><div style="max-width:300px" title="' + desc.replace(/"/g, '&quot;') + '">' + desc + '</div></td>'
       + '<td style="white-space:nowrap;font-size:12px;text-align:center">' + un + '</td>'
-      + '<td style="text-align:center;white-space:nowrap">' + qtd + '</td>'
-      + '<td style="text-align:right;white-space:nowrap">' + fmt(vuEst) + '</td>'
-      + '<td style="text-align:right;white-space:nowrap;font-weight:600">' + fmt(valorTotal) + '</td>'
-      + '<td style="text-align:center">' + (situacao ? '<span class="badge ' + sitBadge + '" style="font-size:10px">' + situacao + '</span>' : '—') + '</td>'
+      + '<td style="text-align:center;white-space:nowrap;font-weight:600;color:var(--success)">' + qtdHomologada + '</td>'
+      + '<td style="text-align:right;white-space:nowrap">' + fmt(vlrUnit) + '</td>'
+      + '<td style="text-align:right;white-space:nowrap;font-weight:600">' + fmt(vlrTotal) + '</td>'
+      + '<td style="text-align:center"><span class="badge badge-green" style="font-size:10px">' + situacao + '</span></td>'
       + '</tr>';
   }).join('');
 
-  const totalValor = itens.reduce(function(s, it) { return s + (it.valorTotal || it.valor_total || 0); }, 0);
-  const homologados = itens.filter(function(it) { return (it.situacao || '') === 'Homologado'; }).length;
+  var totalHomologado = result.totalHomologado || itens.reduce(function(s, it) { return s + (it.vlrTotalHomologado || 0); }, 0);
+  var totalQtd = itens.reduce(function(s, it) { return s + (it.qtdHomologada || 0); }, 0);
 
-  document.getElementById('modal-itens-content').innerHTML =
-    '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted);display:flex;gap:16px;flex-wrap:wrap">'
+  document.getElementById('modal-itens-content').innerHTML = fornecedorInfo
+    + '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted);display:flex;gap:16px;flex-wrap:wrap">'
     + '<span><strong>' + itens.length + '</strong> item(ns)</span>'
-    + '<span><strong>' + homologados + '</strong> homologado(s)</span>'
-    + '<span>Valor total estimado: <strong style="color:var(--primary)">' + fmt(totalValor) + '</strong></span>'
+    + '<span>Qtd. total disponível: <strong style="color:var(--success)">' + totalQtd + '</strong></span>'
+    + '<span>Valor total homologado: <strong style="color:var(--primary)">' + fmt(totalHomologado) + '</strong></span>'
     + '</div>'
     + '<div style="overflow-x:auto">'
     + '<table class="itens-table">'
-    + '<thead><tr><th style="text-align:center">#</th><th>Descrição</th><th style="text-align:center">Un.</th><th style="text-align:center">Qtd.</th><th style="text-align:right">Valor Unit. Est.</th><th style="text-align:right">Valor Total</th><th style="text-align:center">Situação</th></tr></thead>'
+    + '<thead><tr><th style="text-align:center">#</th><th>Descrição</th><th style="text-align:center">Un.</th><th style="text-align:center">Saldo Disp.</th><th style="text-align:right">Valor Unit.</th><th style="text-align:right">Valor Total</th><th style="text-align:center">Situação</th></tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table></div>';
 }
