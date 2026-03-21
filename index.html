@@ -734,41 +734,52 @@ function renderTabela() {
 // ── VER ITENS ────────────────────────────────────────────────────────────────
 async function verItens(ataId) {
   const ata = todasAtas.find(function(a) { return getAtaId(a) === ataId; });
+  if (!ata) { toast('Ata não encontrada', 'error'); return; }
 
-  document.getElementById('modal-title').textContent = 'Itens da Ata ' + getNumeroAta(ata || {});
-  document.getElementById('modal-subtitle').textContent = getObjeto(ata || {});
+  document.getElementById('modal-title').textContent = 'Itens da Licitação — Ata ' + getNumeroAta(ata);
+  document.getElementById('modal-subtitle').textContent = getObjeto(ata);
 
-  const fim = getVigenciaFim(ata || {});
-  const inicio = getVigenciaInicio(ata || {});
+  const fim = getVigenciaFim(ata);
+  const inicio = getVigenciaInicio(ata);
   const dias = diasRestantes(fim);
-  const link = getPNCPLink(ata || {});
-  const numComp = getNumeroCompra(ata || {});
-  const anoVig = getAnoVigencia(ata || {});
+  const link = getPNCPLink(ata);
+  const numComp = getNumeroCompra(ata);
+  const anoVig = getAnoVigencia(ata);
+  const numLic = getField(ata)('numero_licitacao') || (numComp ? 'Pregão ' + numComp : '—');
 
   document.getElementById('modal-meta').innerHTML =
-    '<div class="modal-meta-item"><div class="modal-meta-label">Número da Ata</div><div class="modal-meta-value">' + getNumeroAta(ata || {}) + '</div></div>'
-    + '<div class="modal-meta-item"><div class="modal-meta-label">Licitação de Origem</div><div class="modal-meta-value">' + (numComp ? 'Pregão ' + numComp : '—') + '</div></div>'
-    + '<div class="modal-meta-item"><div class="modal-meta-label">Vigência</div><div class="modal-meta-value">' + fmtDate(inicio) + ' → ' + fmtDate(fim) + '</div></div>'
+    '<div class="modal-meta-item"><div class="modal-meta-label">Número da Ata</div><div class="modal-meta-value">' + getNumeroAta(ata) + '</div></div>'
+    + '<div class="modal-meta-item"><div class="modal-meta-label">Licitação de Origem</div><div class="modal-meta-value">' + numLic + '</div></div>'
+    + '<div class="modal-meta-item"><div class="modal-meta-label">Vigência</div><div class="modal-meta-value">' + fmtDate(inicio) + ' a ' + fmtDate(fim) + '</div></div>'
     + '<div class="modal-meta-item"><div class="modal-meta-label">Prazo Restante</div><div class="modal-meta-value"><span class="badge ' + prazoClass(dias) + '">' + prazoLabel(dias) + '</span></div></div>'
-    + '<div class="modal-meta-item"><div class="modal-meta-label">Ano de Vigência</div><div class="modal-meta-value">' + (anoVig === 1 ? '1&ordm; Ano' : anoVig === 2 ? 'Prorrogação (2&ordm; Ano)' : '—') + '</div></div>'
-    + (link ? '<div class="modal-meta-item"><div class="modal-meta-label">Link PNCP</div><div class="modal-meta-value"><a href="' + link + '" target="_blank">&#128279; Acessar no PNCP</a></div></div>' : '');
+    + '<div class="modal-meta-item"><div class="modal-meta-label">Ano de Vigência</div><div class="modal-meta-value">' + (anoVig === 1 ? '1&ordm; Ano (original)' : anoVig === 2 ? 'Prorrogação (2&ordm; Ano)' : '—') + '</div></div>'
+    + (link ? '<div class="modal-meta-item"><div class="modal-meta-label">Link PNCP</div><div class="modal-meta-value"><a href="' + link + '" target="_blank" style="color:var(--accent)">Acessar no PNCP &#8599;</a></div></div>' : '');
 
-  document.getElementById('modal-itens-content').innerHTML = '<div class="empty-state"><div class="icon">&#9203;</div><p>Carregando itens...</p></div>';
+  document.getElementById('modal-itens-content').innerHTML = '<div class="empty-state"><div class="icon">&#9203;</div><p>Carregando itens da licitação...</p></div>';
   document.getElementById('modal-itens').classList.add('show');
 
-  // Cache local
-  if (atasComItens[ataId]) {
-    renderItens(atasComItens[ataId]);
+  // Extrair anoCompra e seqCompra do ID da ata
+  const parsed = parseAtaId(ataId);
+  if (!parsed) {
+    document.getElementById('modal-itens-content').innerHTML = '<div class="empty-state"><div class="icon">&#10060;</div><p>Não foi possível identificar a compra desta ata.</p></div>';
+    return;
+  }
+
+  // Usar chave da compra para cache (todas as atas da mesma compra compartilham itens)
+  const cacheKey = parsed.anoCompra + '-' + parsed.seqCompra;
+
+  if (atasComItens[cacheKey]) {
+    renderItens(atasComItens[cacheKey]);
     return;
   }
 
   try {
-    const r = await fetch(EDGE + '?action=itens&numeroControlePNCP=' + encodeURIComponent(ataId), {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-    });
+    const r = await fetch(EDGE + '?action=itens&anoCompra=' + parsed.anoCompra + '&seqCompra=' + parsed.seqCompra);
     if (!r.ok) throw new Error('Erro HTTP ' + r.status);
     const data = await r.json();
     const itens = data.data || [];
+    atasComItens[cacheKey] = itens;
+    // Também salvar com o ataId para busca nos filtros
     atasComItens[ataId] = itens;
     renderItens(itens);
   } catch (e) {
@@ -782,47 +793,47 @@ function renderItens(itens) {
     return;
   }
 
-  const totalSaldo = itens.reduce(function(s, it) {
-    return s + (it.saldo_valor || it.saldoValor || 0);
-  }, 0);
 
   const rows = itens.map(function(it) {
     const desc = it.descricao || it.nome || '—';
-    const un = it.unidade_medida || it.unidadeMedida || '';
-    const vuEst = it.valor_unitario_estimado || it.valorUnitarioEstimado || 0;
-    const vuHom = it.valor_unitario_homologado || it.valorUnitarioHomologado || 0;
-    const qtdReg = it.quantidade_registrada || it.quantidadeRegistrada || 0;
-    const saldoQtd = it.saldo_quantidade !== undefined ? it.saldo_quantidade : (it.saldoQuantidade !== undefined ? it.saldoQuantidade : qtdReg);
-    const saldoVal = it.saldo_valor || it.saldoValor || (saldoQtd * (vuHom || vuEst));
-    const fornecedor = it.nome_fornecedor || it.nomeFornecedor || '—';
+    const un = it.unidadeMedida || it.unidade_medida || '';
+    const qtd = it.quantidade || it.quantidade_registrada || 0;
+    const vuEst = it.valorUnitarioEstimado || it.valor_unitario_estimado || 0;
+    const valorTotal = it.valorTotal || it.valor_total || 0;
     const situacao = it.situacao || '';
-    const numItem = it.numero_item || it.numeroItem || '';
-    const pct = qtdReg > 0 ? Math.max(0, Math.min(100, (saldoQtd / qtdReg) * 100)) : 0;
-    const fillClass = pct > 50 ? '' : pct > 20 ? 'warn' : 'danger';
+    const numItem = it.numeroItem || it.numero_item || '';
+    const material = it.materialOuServico || '';
+
+    const sitBadge = situacao === 'Homologado' ? 'badge-green'
+      : situacao === 'Fracassado' ? 'badge-red'
+      : situacao === 'Deserto' ? 'badge-orange'
+      : 'badge-gray';
 
     return '<tr>'
-      + '<td style="color:var(--text-muted);font-size:11px;white-space:nowrap">' + numItem + '</td>'
-      + '<td><div style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + desc.replace(/"/g, '&quot;') + '">' + desc + '</div></td>'
-      + '<td style="white-space:nowrap;font-size:11px">' + un + '</td>'
-      + '<td style="text-align:right;white-space:nowrap">' + fmt(vuHom > 0 ? vuHom : vuEst) + '</td>'
-      + '<td style="min-width:130px">'
-      +   '<div style="font-weight:600;font-size:13px">' + fmt(saldoVal) + '</div>'
-      +   '<div class="saldo-bar"><div class="saldo-fill ' + fillClass + '" style="width:' + pct + '%"></div></div>'
-      +   '<div style="font-size:10px;color:var(--text-muted)">' + saldoQtd + ' ' + un + ' (' + Math.round(pct) + '%)</div>'
+      + '<td style="color:var(--text-muted);font-size:11px;white-space:nowrap;text-align:center">' + numItem + '</td>'
+      + '<td><div style="max-width:280px" title="' + desc.replace(/"/g, '&quot;') + '">' + desc + '</div>'
+      +   (material ? '<div style="font-size:10px;color:var(--text-muted)">' + material + '</div>' : '')
       + '</td>'
-      + '<td style="font-size:11px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + fornecedor.replace(/"/g, '&quot;') + '">' + fornecedor + '</td>'
-      + '<td>' + (situacao ? '<span class="badge badge-gray" style="font-size:10px">' + situacao + '</span>' : '—') + '</td>'
+      + '<td style="white-space:nowrap;font-size:12px;text-align:center">' + un + '</td>'
+      + '<td style="text-align:center;white-space:nowrap">' + qtd + '</td>'
+      + '<td style="text-align:right;white-space:nowrap">' + fmt(vuEst) + '</td>'
+      + '<td style="text-align:right;white-space:nowrap;font-weight:600">' + fmt(valorTotal) + '</td>'
+      + '<td style="text-align:center">' + (situacao ? '<span class="badge ' + sitBadge + '" style="font-size:10px">' + situacao + '</span>' : '—') + '</td>'
       + '</tr>';
   }).join('');
 
+  const totalValor = itens.reduce(function(s, it) { return s + (it.valorTotal || it.valor_total || 0); }, 0);
+  const homologados = itens.filter(function(it) { return (it.situacao || '') === 'Homologado'; }).length;
+
   document.getElementById('modal-itens-content').innerHTML =
-    '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted)">'
-    + '<strong>' + itens.length + ' item(ns)</strong>'
-    + ' &middot; Saldo total estimado: <strong style="color:var(--success)">' + fmt(totalSaldo) + '</strong>'
+    '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted);display:flex;gap:16px;flex-wrap:wrap">'
+    + '<span><strong>' + itens.length + '</strong> item(ns)</span>'
+    + '<span><strong>' + homologados + '</strong> homologado(s)</span>'
+    + '<span>Valor total estimado: <strong style="color:var(--primary)">' + fmt(totalValor) + '</strong></span>'
     + '</div>'
     + '<div style="overflow-x:auto">'
     + '<table class="itens-table">'
-    + '<thead><tr><th>#</th><th>Descrição</th><th>Un.</th><th>Valor Unit.</th><th>Saldo Disponível</th><th>Fornecedor</th><th>Situação</th></tr></thead>'
+    + '<thead><tr><th style="text-align:center">#</th><th>Descrição</th><th style="text-align:center">Un.</th><th style="text-align:center">Qtd.</th><th style="text-align:right">Valor Unit. Est.</th><th style="text-align:right">Valor Total</th><th style="text-align:center">Situação</th></tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table></div>';
 }
